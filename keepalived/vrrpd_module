@@ -1,0 +1,14 @@
+vrrp_instance memcached  {  
+    state MASTER           
+    interface eth1    
+    virtual_router_id 200 
+    priority 100   
+    advert_int 1  
+    authentication { 
+        auth_type PASS  
+        auth_pass 08756CD2
+    }
+    virtual_ipaddress {
+        10.10.32.250 # db_manger
+    }
+}

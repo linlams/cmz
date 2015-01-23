@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re, telnetlib, sys
-from util import cache
+from util import cached
 import time
 
 class MemcachedStats:
@@ -44,7 +45,6 @@ class MemcachedStats:
         ' Return a list of slab ids in use '
         return self._slab_regex.findall(self.command('stats items'))
 
-    @cache(30)
     def stats(self):
         ' Return a dict containing memcached stats '
         self._stats_timestamp = time.time()

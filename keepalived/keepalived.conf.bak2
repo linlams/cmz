@@ -1,0 +1,43 @@
+global_defs {  
+   notification_email {
+     wangxulin@cmcm.com
+   }
+   notification_email_from duba_notice@kingsoft.com
+   smtp_server 10.10.0.130
+   smtp_connect_timeout 30
+   router_id DB_LVS_ZW
+}
+
+vrrp_instance memcached  {  
+    state MASTER           
+    interface eth1    
+    virtual_router_id 200 
+    priority 100   
+    advert_int 1  
+    authentication { 
+        auth_type PASS  
+        auth_pass 08756CD2
+    }
+    virtual_ipaddress {
+        10.10.32.199
+    }
+}
+
+virtual_server 10.10.32.199 8000 {
+    delay_loop 6
+    lvs_sched rr
+    lvs_method DR
+    persistence_timeout 5000
+    protocol TCP
+
+    real_server 10.10.32.26 8000 {
+        weight 10
+        
+        TCP_CHECK {
+	    connect_ip 10.10.32.26 8000
+	    connect_port 11211
+	    connect_timeout 30
+	    warmup 10
+	}
+    }
+}

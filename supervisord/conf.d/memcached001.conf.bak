@@ -1,0 +1,13 @@
+[program:memcached_001]
+command=/usr/bin/memcached -u nobody -l 0.0.0.0 -p 11211
+priority=999
+autostart=true
+startretries=3
+exitcodes=0,2
+stopsignal=QUIT
+stopwaitsecs=10
+log_stdout=true
+log_stderr=true
+logfile=/var/log/cat.log
+logfile_maxbytes=1MB
+logfile_backups=10
