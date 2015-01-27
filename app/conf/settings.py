@@ -14,6 +14,13 @@ REDIS = {
     'db': 0
 }
 
+SUPERVISOR_RPC_URL_TEMPLATE = 'http://{username}:{password}@{host}:9001/RPC2'
+SUPERVISOR_RPC_KWARGS = {
+    'username': '',
+    'password': '',
+    'host': 'localhost',
+}
+
 CACHE_EXPIRE_TIME = 3600
 CACHE = redis.StrictRedis(host=REDIS['host'], port=REDIS['port'], db=REDIS['db'])
 

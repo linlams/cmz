@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import xmlrpclib
-from conf.settings import db, SUPERVISOR_CONFS_DIR
+from conf.settings import db, SUPERVISOR_CONFS_DIR, SUPERVISOR_RPC_URL_TEMPLATE, SUPERVISOR_RPC_KWARGS
 import jinja2
 from tempfile import NamedTemporaryFile
 from subprocess import PIPE, Popen
 import logging
+from supervisor.options import make_namespec, split_namespec
+from supervisor import xmlrpc
 
 
 USERNAME = 'user'
@@ -14,28 +16,10 @@ PASSWORD = '123'
 HOST = '127.0.0.1'
 # HOST = '10.10.32.28'
 
-RPC_URL = 'http://{host}:9001/RPC2'.format(host=HOST)
-
-server = xmlrpclib.Server(RPC_URL.format(host=HOST))
-process_infos = server.supervisor.getAllProcessInfo()
-# server.supervisor.startProcess(pinfo['name'])
-# server.supervisor.stopProcess(pinfo['name'])
-# server.supervisor.startProcess(process_name)
-
 
 def process_already_exists(process_name, process_infos):
     return len(filter(lambda x: x['name'] == process_name, process_infos)) == 1
 
-
-def start_process(process_name, host):
-    rpc_url = RPC_URL.format(host=host)
-    server = xmlrpclib.Server(rpc_url)
-    process_infos = server.supervisor.getAllProcessInfo()
-
-    if process_already_exists(process_name, process_infos):
-        raise Exception('Proccess {process_name} already exists'.format(process_name=process_name))
-
-    server.supervisor.startProcess(process_name)
 
 businesses = list(db.business.find())
 mcs = list(db.memcached.find())
@@ -47,78 +31,55 @@ for business in businesses:
     business['memcached'] = memcached
 
 
-for business in businesses:
-
-    # data
-    data = {'businesses': businesses}
-    # template
-    template_file = open(SUPERVISOR_CONFS_DIR + '/memcached.conf.template', 'r')
-    template = jinja2.Template(template_file.read())
-    # dest_file
-    filename = '%s_memcached_%s_%d.conf' % (business['name'], business['lvs']['vip'], business['lvs']['port'])
-    dest_filename = '/etc/supervisord/conf.d/{conf_file}'.format(conf_file=filename)
-
-    def _eq_(x):
-        return x['ip'] == business['memcached']['ip'] and x['port'] == business['memcached']['port']
-
-    with NamedTemporaryFile() as tempfile:
-        content = template.render(business=business)
-        tempfile.write(content)
-        tempfile.flush()
-        print 'ansible {pattern} -m copy -a "src={src} dest={conf_file}" -s'.format(pattern=business['memcached']['ip'], src=tempfile.name, conf_file=dest_filename)
-        p = Popen('ansible {pattern} -m copy -a "src={src} dest={conf_file}" -s'.format(
-            pattern=business['memcached']['ip'],
-            src=tempfile.name,
-            conf_file=dest_filename
-        ), stdin=PIPE, stdout=PIPE, shell=True)
-        # p = Popen('ansible {pattern} -m command -a "rm {conf_file} -f" -s'.format(
-        #     pattern=business['memcached']['ip'],
-        #     src=tempfile.name,
-        #     conf_file=dest_filename
-        # ), stdin=PIPE, stdout=PIPE, shell=True)
-        p.wait()
-        # print p.stdout.read()
-
-
-filename = '%s_memcached_%s_%d.conf' % (business['name'], business['lvs']['vip'], business['lvs']['port'])
-dest_filename = '/etc/supervisord/conf.d/{conf_file}'.format(conf_file=filename)
+# filename = '%s_memcached_%s_%d.conf' % (business['name'], business['lvs']['vip'], business['lvs']['port'])
+# dest_filename = '/etc/supervisord/conf.d/{conf_file}'.format(conf_file=filename)
 
 
 logger = logging.getLogger(__name__)
 
 
-data = {'business': business}
-pattern = business['memcached']['ip'],
-template_filepath = SUPERVISOR_CONFS_DIR + '/memcached.conf.template'
+# data = {'business': business}
+# pattern = business['memcached']['ip'],
+# template_filepath = SUPERVISOR_CONFS_DIR + '/memcached.conf.template'
 
 
-def template_format(pattern, data, filename, template_filepath, dest_path='/etc/supervisord/conf.d'):
+def src_content(data, template_filepath):
     template_file = open(template_filepath, 'r')
     template = jinja2.Template(template_file.read())
 
+    content = template.render(data)
+    return content
+
+filename = '{business_name}_memcached_{vip}_{port}.conf'.format(business_name='', vip='', port='')
+dest_filepath = '/etc/supervisord/conf.d/' + filename
+
+
+def ansible_format(pattern, content, dest_filepath):
     with NamedTemporaryFile() as tempfile:
-        content = template.render(data)
         tempfile.write(content)
         tempfile.flush()
         logger.info(
             'ansible {pattern} -m copy -a "src={src} dest={conf_file}" -s'.format(
                 pattern=pattern,
                 src=tempfile.name,
-                conf_file=dest_path + '/' + filename,
+                conf_file=dest_filepath,
             ))
         p = Popen('ansible {pattern} -m copy -a "src={src} dest={conf_file}" -s'.format(
             pattern=pattern,
             src=tempfile.name,
-            conf_file=dest_path + '/' + filename,
+            conf_file=dest_filepath,
         ), stdin=PIPE, stdout=PIPE, shell=True)
         p.wait()
 
 
 class SupervisorController(object):
-    RPC_URL = 'http://{host}:9001/RPC2'.format(host=HOST)
 
     def __init__(self, host):
-        server = xmlrpclib.Server(self.RPC_URL.format(host=host))
+
+        rpc_kwargs = SUPERVISOR_RPC_KWARGS.copy()
+        rpc_kwargs['host'] = host
+
+        server = xmlrpclib.Server(SUPERVISOR_RPC_URL_TEMPLATE.format(**rpc_kwargs))
         self.supervisor = server.supervisor
         self.logger = logging.getLogger(__name__)
 
@@ -131,7 +92,7 @@ class SupervisorController(object):
         '''
         all_infos = self.supervisor.getAllProcessInfo()
 
-        if not names or "all" in names:
+        if "all" in names:
             matching_infos = all_infos
         else:
             matching_infos = []
@@ -156,6 +117,27 @@ class SupervisorController(object):
                         msg = "%s: ERROR (no such process)" % name
                     self.logger.info(msg)
         return matching_infos
+
+    def _startresult(self, result):
+        name = make_namespec(result['group'], result['name'])
+        code = result['status']
+        template = '%s: ERROR (%s)'
+        if code == xmlrpc.Faults.BAD_NAME:
+            return template % (name, 'no such process')
+        elif code == xmlrpc.Faults.NO_FILE:
+            return template % (name, 'no such file')
+        elif code == xmlrpc.Faults.NOT_EXECUTABLE:
+            return template % (name, 'file is not executable')
+        elif code == xmlrpc.Faults.ALREADY_STARTED:
+            return template % (name, 'already started')
+        elif code == xmlrpc.Faults.SPAWN_ERROR:
+            return template % (name, 'spawn error')
+        elif code == xmlrpc.Faults.ABNORMAL_TERMINATION:
+            return template % (name, 'abnormal termination')
+        elif code == xmlrpc.Faults.SUCCESS:
+            return '%s: started' % name
+        # assertion
+        raise ValueError('Unknown result code %s for %s' % (code, name))
 
     def start(self, names):
         '''
@@ -205,7 +187,7 @@ class SupervisorController(object):
                     else:
                         name = make_namespec(group_name, process_name)
                         self.logger.info('%s: started' % name)
-        return results
+        return self.status(names)
 
     def stop(self, names):
         '''
@@ -253,6 +235,8 @@ class SupervisorController(object):
                         name = make_namespec(group_name, process_name)
                         self.logger.info('%s: stopped' % name)
 
+        return self.status(names)
+
     def restart(self, names):
         '''
             restart <name>\t\tRestart a process
@@ -262,8 +246,8 @@ class SupervisorController(object):
             Note: restart does not reread config files.
                 For that, see reread and update.
         '''
-        self.stop(arg)
-        self.start(arg)
+        self.stop(names)
+        return self.start(names)
 
     def _formatConfigInfo(self, configinfo):
         name = make_namespec(configinfo['group'], configinfo['name'])
@@ -282,7 +266,7 @@ class SupervisorController(object):
         template = '%(name)-32s %(inuse)-9s %(autostart)-9s %(priority)s'
         return template % formatted
 
-    def avail(self, arg):
+    def avail(self):
         "avail\t\t\tDisplay all configured processes"
         try:
             configinfo = self.supervisor.getAllConfigInfo()
@@ -313,7 +297,7 @@ class SupervisorController(object):
 
         return {'available': added, 'changed': changed, 'disappeared': dropped}
 
-    def reread(self, arg):
+    def reread(self):
         "reread \t\t\tReload the daemon's configuration files"
         try:
             result = self.supervisor.reloadConfig()
@@ -366,7 +350,7 @@ class SupervisorController(object):
             else:
                 self.logger.info("%s: removed process group" % name)
 
-    def update(self, arg):
+    def update(self, gnames):
         '''
             update\t\t\tReload config and add/remove as necessary
             update all\t\tReload config and add/remove as necessary
@@ -386,7 +370,7 @@ class SupervisorController(object):
                 raise
 
         added, changed, removed = result[0]
-        valid_gnames = set(arg.split())
+        valid_gnames = gnames
 
         # If all is specified treat it as if nothing was specified.
         if "all" in valid_gnames:
@@ -435,3 +419,5 @@ class SupervisorController(object):
                 continue
             self.supervisor.addProcessGroup(gname)
             log(gname, "added process group")
+
+        return self.status(gnames)

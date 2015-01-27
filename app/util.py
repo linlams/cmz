@@ -8,14 +8,16 @@ import inspect
 from collections import defaultdict, Iterator
 from bson import json_util, ObjectId
 import hashlib
-from settings import db, CACHE, CACHE_EXPIRE_TIME
+from conf.settings import db, CACHE, CACHE_EXPIRE_TIME
 from flask import Response
-import urllib, urllib2
+import urllib
+import urllib2
 
 from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
 import time
+
 
 def md5(*args):
     length = len(args)
