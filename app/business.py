@@ -19,4 +19,4 @@ def get_all_businesses():
 def save_business(business_name):
     business_str = request.get_data()
     print business_str
-    # db.business.find()
+    return db.business.find()
