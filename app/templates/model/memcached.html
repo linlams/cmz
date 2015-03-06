@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% set entity_type = 'Memcached 信息' %}
+
+{% block title %}{{entity_type}}{% endblock %}
+
+{% block page_content %}
+<div class="col-lg-12">
+    <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#myModal">
+        添加 
+    </button>
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="post" class="form form-horizontal" enctype="multipart/form-data" role="form">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel"><span id="edit_panel_title">添加</span> {{entity_type}}</h4>
+          </div>
+          <div class="modal-body">
+            {{ wtf.quick_form_content(form, form_type="horizontal", horizontal_columns=('lg', 4, 8)) }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>项目</th>
+                <th>部门</th>
+                <th>虚拟IP</th>
+                <th>虚拟端口</th>
+                <th>最大单值(MB)</th>
+                <th>真实IP</th>
+                <th>真实端口</th>
+                <th>主/备</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for mc in memcacheds %}
+            <tr>
+                <td>{{mc.project.name}}</td>
+                <td>{{mc.project.department.name}}</td>
+                <td>{{mc.vhost.ip}}</td>
+                <td>{{mc.vhost_port}}</td>
+                <td>{{mc.max_item_size}}</td>
+                <td>{{mc.host.ip}}</td>
+                <td>{{mc.host_port}}</td>
+                <td>{{mc.master}}</td>
+                <td>{{mc.status}}</td>
+                <td>
+                    <button type="button" onclick='modify("{{mc.ip}}", "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_item_size}}, "{{mc.master}}")' class="btn btn-danger">
+                        修改</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{super()}}
+    <script>
+        $.fn.serializeObject = function() {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+        function deleteUser(id, mcname) {
+            if(!confirm("确定要删除" + "用户" + mcname +"吗？")) {
+                return false;
+            }
+            $.ajax({
+                url: '/mc/'+id,
+                type: 'DELETE',
+                success: function(result) {
+                    if (result.success) {
+                        window.location.href = window.location.href;
+                    }
+                }
+            });
+        }
+
+        function modify(id, project_id, vhost_id, vhost_port, host_id, host_port, max_item_size, master) {
+            $('#edit_panel_title').html('修改');
+            $('#id').val(id);
+            $('#project_id').val(project_id);
+            $('#vhost_id').val(vhost_id);
+            $('#vhost_port').val(vhost_port);
+            $('#host_id').val(host_id);
+            $('#host_port').val(host_port);
+            $('#max_item_size').val(max_item_size);
+            setRadioValue('master', master);
+            $('#myModal').modal('show');
+        }
+
+        
+
+        function setRadioValue(name, value) {
+            $('input[name="' + name + '"][value="' + value +'"]').prop('checked', true);
+        }
+
+    </script>
+{% endblock %}

@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+import jinja2
 import json
 import functools
-import itertools
-import inspect
 from collections import defaultdict, Iterator
-from bson import json_util, ObjectId
+from bson import json_util
 import hashlib
-from conf.settings import db, CACHE, CACHE_EXPIRE_TIME
 from flask import Response
 import urllib
 import urllib2
@@ -35,56 +34,6 @@ def md5(*args):
     return m.hexdigest()
 
 
-class cached(object):
-    def __init__(self, expire_time=None):
-        self.expire_time = expire_time or CACHE_EXPIRE_TIME
-
-    def __call__(self, f):
-        @functools.wraps(f)
-        def decorator(*args, **kwargs):
-            if request.method == 'GET':
-                __resp_id__ = 'GET ' + request.url
-                response = CACHE.get(__resp_id__)
-                if response is None:
-                    response = f(*args, **kwargs)
-                    response = to_json(response)
-                    CACHE.setex(__resp_id__, self.expire_time, response)
-            else:
-                response = f(*args, **kwargs)
-            return response
-        return decorator
-
-class clear_cached(object):
-    def __init__(self, key_pattern_formats=None):
-        def is_all_str(key_pattern_formats):
-            return all(map(lambda x: isinstance(x, str), key_pattern_formats))
-
-        self.cleared_key_pattern_formats = key_pattern_formats\
-            if key_pattern_formats and isinstance(key_pattern_formats, list)\
-                and is_all_str(key_pattern_formats) else []
-
-    def __call__(self, func):
-
-        args_names = inspect.getargspec(func)[0]
-
-        @functools.wraps(func)
-        def decorator(*args, **kwargs):
-            response = func(*args, **kwargs)
-
-            args_dict = dict(itertools.izip(args_names, args))
-            args_dict.update(kwargs)
-
-            keys = map(lambda key_f: key_f.format(**args_dict),
-                    self.cleared_key_pattern_formats)
-            real_keys = sum(map(CACHE.keys, keys), [])
-
-            if len(real_keys) > 0:
-                CACHE.delete(*real_keys)
-
-            return response
-        return decorator
-
-
 def json_response(func):
     '把函数的返回值以json的格式输出'
     @functools.wraps(func)
@@ -95,7 +44,7 @@ def json_response(func):
 
         if (end - begin) > 0.01:
             current_app.logger.warning('Slow request: %s\n\tMethod: %s\n \tDuration: %s\n' %
-                    (request.url, request.method, end - begin))
+                                       (request.url, request.method, end - begin))
 
         status = 200
         if isinstance(res, tuple):
@@ -107,9 +56,11 @@ def json_response(func):
         return Response(json_str, mimetype='application/json', status=status)
     return _
 
+
 def to_json(o):
     o = list(o) if isinstance(o, Iterator) else o
     return json.dumps(o, default=json_util.default, separators=(',', ':'))
+
 
 def get_tags_in_levels(pure_namespaces):
     'pure_namespaces'
@@ -120,19 +71,24 @@ def get_tags_in_levels(pure_namespaces):
                 tags_in_levels[k].append(v)
     return tags_in_levels
 
+
 def remove_duplicate(iterable, key=None):
     '以key作为唯一标识，去除序列中的重复元素'
     iter_dict = dict(map(lambda x: (key(x), x), iterable))
     return iter_dict.values()
 
+
 def to_boolean(s):
     return s in {'True', 'true', 'on', '1', 'yes'}
+
 
 def to_integer(s):
     return int(s)
 
+
 def to_float(s):
     return float(s)
+
 
 def to_number(s):
     return to_float(s)
@@ -156,26 +112,16 @@ TYPE_CONVERTORS = dict(
 #    set
 
 
-def is_id_valid(oid, doc, collection_name="namespace"):
-    '鉴定 document oid 是否合法'
-    if not ObjectId.is_valid(oid):
-        return False
-    if '_id' not in doc:
-        return False
-    if ObjectId(oid) != doc['_id']:
-        return False
-    entity = db[collection_name].find_one(dict(_id=doc['_id']))
-    return entity is not None
-
 CONVERTORS = {
     'json': json.loads,
 }
+
 
 def __urllib_method__(url, data, method='GET', result_format='json', headers=None):
     'urllib2, urllib'
     opener = urllib2.build_opener(urllib2.HTTPHandler)
     req = urllib2.Request(url, urllib.urlencode(data))
-    req.get_method = lambda : method
+    req.get_method = lambda: method
     fd = opener.open(req)
     result = fd.read()
     if result_format in CONVERTORS:
@@ -183,14 +129,18 @@ def __urllib_method__(url, data, method='GET', result_format='json', headers=Non
     else:
         return result
 
+
 def get_json(url, headers=None):
     return __urllib_method__(url, None, 'GET', 'json', headers)
+
 
 def post_json(url, data, headers=None):
     return __urllib_method__(url, data, 'POST', 'json', headers)
 
+
 def put_json(url, data, headers=None):
     return __urllib_method__(url, data, 'PUT', 'json', headers)
+
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
@@ -232,3 +182,22 @@ def crossdomain(origin=None, methods=None, headers=None,
         f.provide_automatic_options = False
         return update_wrapper(wrapped_function, f)
     return decorator
+
+
+env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__name__), 'templates')))
+
+TEMPLATE_DICT = {
+    'memcached': '/etc/supervisord/conf.d/memcached.conf.template',
+    'memcached.filename': '/etc/supervisord/conf.d/memcached.conf.filename',
+    'keepalived': '/etc/keepalived/keepalived.conf',
+}
+
+
+def conf_file_template(conf_file_type):
+    conf_file_template = env.get_template(TEMPLATE_DICT[conf_file_type])
+
+    print conf_file_template
+
+    def _(**kwargs):
+        return conf_file_template.render(kwargs)
+    return _

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}基础信息{% endblock %}
+
+{% block page_content %}
+<div class="col-lg-8">
+    <div role="tabpanel">
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            {% for objects in taged_objects %}
+            <li role="presentation" {% if active_tag == objects["class"] %}class="active"{% endif %}><a href="#tab_{{loop.index}}" aria-controls="tab_{{loop.index}}" role="tab" data-toggle="tab">{{objects["class"]}}</a></li>
+            {% endfor %}
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            {% for objects in taged_objects %}
+            <div role="tabpanel" class="tab-pane {% if active_tag == objects["class"] %}active {% endif %}" id="tab_{{loop.index}}">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>标题</th>
+                            <th>网址</th>
+                            <th>图片</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="sortable_objects">
+                    {% for object in objects["objects"] %}
+                        <tr>
+                            <td>{{loop.index}}</td>
+                            <td>{{object.title}}</td>
+                            <td>{{object.url}}</td>
+                            <td><img width=60 height=40 src="{{object.image}}"></td>
+                            <td>
+                                <button type="button" onclick='deleteSite("{{object.url}}", ["{{objects['class']}}"])' class="btn btn-danger">
+                                    删除</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</div>
+<div class="col-lg-4">
+    <div class="panel panel-primary">
+        <div class="panel-heading"><b>添加网址</b></div>
+        <div class="panel-body">
+            {{ wtf.quick_form(form, form_type="horizontal", horizontal_columns=('lg', 3, 9), enctype="multipart/form-data",) }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+    {{super()}}
+    <script>
+        $.fn.serializeObject = function() {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        $(function() {
+            $('form').append("<input type='hidden' name='active_tag' id=active_tag>");
+
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                $("#active_tag").val($('.nav.nav-tabs>li.active>a').html());
+            })
+
+            $(".sortable_objects").sortable().bind("sortupdate", function() {
+                var tds = $('.tab-pane:visible tbody tr').find('td:eq(2)');
+
+                var urls = _.map(tds, function(td) {
+                    return $(td).text()
+                })
+                
+            });
+        });
+
+        function deleteSite(url, tags) {
+            $.ajax({
+                url: '/?url=' + encodeURIComponent(url) + '&tags=' + encodeURIComponent(JSON.stringify(tags)),
+                type: 'DELETE',
+                success: function(result) {
+                    if (result.success) {
+                        window.location.href = window.location.href;
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}

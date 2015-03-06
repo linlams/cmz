@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}部门信息{% endblock %}
+
+{% block page_content %}
+<div class="col-lg-8">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>部门名称</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for department in departments %}
+            <tr>
+                <td>{{loop.index}}</td>
+                <td>{{department.name}}</td>
+                <td>
+                    <button type="button" onclick="modify('{{department.id}}', '{{department.name}}')" class="btn btn-danger">
+                        修改</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="col-lg-4">
+    <div class="panel panel-primary">
+        <div class="panel-heading"><b id="edit_panel_title">添加</b></div>
+        <div class="panel-body">
+            {{ wtf.quick_form(form, form_type="horizontal", horizontal_columns=('lg', 4, 8), enctype="multipart/form-data",) }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+    {{super()}}
+    <script>
+        $.fn.serializeObject = function() {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function() {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+        function deleteDepartment(id, name) {
+            if(!confirm("确定要删除" + "部门" + name +"吗？")) {
+                return false;
+            }
+            $.ajax({
+                url: '/department/'+id,
+                type: 'DELETE',
+                success: function(result) {
+                    if (result.success) {
+                        window.location.href = window.location.href;
+                    }
+                }
+            });
+        }
+
+        function modify(id, name) {
+            $('#edit_panel_title').html('修改信息');
+            $('#id').val(id);
+            $('#name').val(name);
+        }
+
+    </script>
+{% endblock %}

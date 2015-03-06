@@ -3,7 +3,7 @@
 '''
    Settings
 '''
-import pymongo
+# import pymongo
 import redis
 import logging_settings
 import logging
@@ -48,10 +48,10 @@ try:
 except ImportError:
     pass
 
-__mclient__ = pymongo.MongoClient(MONGO_HOST, MONGO_PORT)
+# __mclient__ = pymongo.MongoClient(MONGO_HOST, MONGO_PORT)
 
-db = __mclient__[MONGO_DBNAME]
+# db = __mclient__[MONGO_DBNAME]
 
-state_db = __mclient__[MONGO_STATE_DBNAME]
-logger = logging.getLogger(__name__)
-logger.error(state_db)
+# state_db = __mclient__[MONGO_STATE_DBNAME]
+# logger = logging.getLogger(__name__)
+# logger.error(state_db)

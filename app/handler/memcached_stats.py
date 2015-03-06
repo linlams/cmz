@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import re, telnetlib, sys
-from util import cached
 import time
 
 class MemcachedStats:
