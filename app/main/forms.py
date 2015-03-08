@@ -54,12 +54,14 @@ class MemcachedForm(Form):
     id = HiddenField(u'ID')
     project_id = SelectField(u'项目', validators=[Required()], choices=PROJECT_CHOICES)
 
+    idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
+
     vhost_id = SelectField(u'虚拟主机', validators=[Required()], choices=VHOST_CHOICES)
     vhost_port = IntegerField(u'虚拟主机端口', validators=[Required()])
 
     host_id = SelectField(u'真实主机', validators=[Required()], choices=HOST_CHOICES)
     host_port = IntegerField(u'真实主机端口', validators=[Required()])
-    max_item_size = IntegerField(u'最大单值(MB)', validators=[Required()])
+    max_mem_size = IntegerField(u'最大内存(MB)', validators=[Required()])
     master = RadioField(u'主备状态', validators=[Required()], choices=[('0', u'主'), ('1', u'备')])
 
 

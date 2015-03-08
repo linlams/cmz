@@ -52,13 +52,13 @@
                 <td>{{mc.project.department.name}}</td>
                 <td>{{mc.vhost.ip}}</td>
                 <td>{{mc.vhost_port}}</td>
-                <td>{{mc.max_item_size}}</td>
+                <td>{{mc.max_mem_size}}</td>
                 <td>{{mc.host.ip}}</td>
                 <td>{{mc.host_port}}</td>
                 <td>{{mc.master}}</td>
                 <td>{{mc.status}}</td>
                 <td>
-                    <button type="button" onclick='modify("{{mc.ip}}", "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_item_size}}, "{{mc.master}}")' class="btn btn-danger">
+                    <button type="button" onclick='modify("{{mc.ip}}", "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_mem_size}}, "{{mc.master}}")' class="btn btn-danger">
                         修改</button>
                 </td>
             </tr>
@@ -102,7 +102,7 @@
             });
         }
 
-        function modify(id, project_id, vhost_id, vhost_port, host_id, host_port, max_item_size, master) {
+        function modify(id, project_id, vhost_id, vhost_port, host_id, host_port, max_mem_size, master) {
             $('#edit_panel_title').html('修改');
             $('#id').val(id);
             $('#project_id').val(project_id);
@@ -110,7 +110,7 @@
             $('#vhost_port').val(vhost_port);
             $('#host_id').val(host_id);
             $('#host_port').val(host_port);
-            $('#max_item_size').val(max_item_size);
+            $('#max_mem_size').val(max_mem_size);
             setRadioValue('master', master);
             $('#myModal').modal('show');
         }

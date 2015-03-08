@@ -2,7 +2,7 @@
 from flask import render_template, url_for, flash, redirect
 from . import main
 from .forms import UserForm, DepartmentForm, MemcachedForm, ProjectForm,\
-    VhostForm, HostForm, RoleForm, IdcForm
+    VhostForm, HostForm, IdcForm
 
 from .. import db
 from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc
@@ -51,9 +51,9 @@ def department_list():
         if form.id.data:
             department = Department.query.get(form.id.data)
         else:
-            deployment = Department()
+            department = Department()
 
-        deployment.name = form.name.data
+        department.name = form.name.data
 
         db.session.add(department)
         if form.id.data:
@@ -83,6 +83,13 @@ def project_list():
         if form.id.data:
             project = Project.query.get(form.id.data)
         else:
+            if Project.query.filter_by(name=form.name.data).first() is not None:
+                flash(u'已经存在同名的了')
+                projects = Project.query.all()
+                return render_template('model/project.html',
+                                       projects=projects,
+                                       form=form,)
+
             project = Project()
 
         project.name = form.name.data
@@ -111,6 +118,7 @@ def delete_project(id):
 @main.route('/host', methods=['GET', 'POST'])
 def host_list():
     form = HostForm()
+    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
     form.csrf_enabled = True
     if form.validate_on_submit():
         if form.id.data:
@@ -169,6 +177,7 @@ def idc_list():
 @main.route('/vhost', methods=['GET', 'POST'])
 def vhost_list():
     form = VhostForm()
+    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
     form.csrf_enabled = True
     if form.validate_on_submit():
         if form.id.data:
@@ -202,6 +211,7 @@ def delete_vhost(id):
 @main.route('/memcached', methods=['GET', 'POST'])
 def memcached_list():
     form = MemcachedForm()
+    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
     form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
     form.vhost_id.choices = [(str(x.id), x.ip) for x in Vhost.query.all()]
     form.host_id.choices = [(str(x.id), x.ip) for x in Host.query.all()]
@@ -217,7 +227,7 @@ def memcached_list():
         mc.host = Host.query.get(form.host_id.data)
         mc.vhost_port = form.vhost_port.data
         mc.host_port = form.host_port.data
-        mc.max_item_size = form.max_item_size.data
+        mc.max_mem_size = form.max_mem_size.data
         mc.master = form.master.data
 
         db.session.add(mc)

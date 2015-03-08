@@ -20,7 +20,7 @@ class Department(db.Model, Entity):
         return '<Department %r>' % self.name
 
 
-class Project(db.Model):
+class Project(db.Model, Entity):
     __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
@@ -32,24 +32,26 @@ class Project(db.Model):
         return '<Project %r>' % self.name
 
 
-class Memcached(db.Model):
+class Memcached(db.Model, Entity):
     __tablename__ = 'memcacheds'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
+    idc_id = db.Column(db.Integer, db.ForeignKey('idcs.id'))
+
     host_id = db.Column(db.Integer, db.ForeignKey('hosts.id'))
     host_port = db.Column(db.Integer, unique=False)
-    max_item_size = db.Column(db.Integer, nullable=False)
+    max_mem_size = db.Column(db.Integer, nullable=False)
 
     master = db.Column(db.Boolean, nullable=False)
+
+    vhost_id = db.Column(db.Integer, db.ForeignKey('vhosts.id'))
+    vhost_port = db.Column(db.Integer, nullable=False)
 
     APPLY_STATUS = 0
     READY_STATUS = 1
     ERROR_STATUS = 2
     status = db.Column(db.Integer, nullable=False, default=0)
-
-    vhost_id = db.Column(db.Integer, db.ForeignKey('vhosts.id'))
-    vhost_port = db.Column(db.Integer, nullable=False)
 
     __table_args__ = (
         db.UniqueConstraint("host_id", "host_port"),
@@ -59,7 +61,7 @@ class Memcached(db.Model):
         return '<Memcached virtual %r:%r\treal %r:%r>' % (self.vhost.ip, self.vhost_port, self.host.ip, self.host_port)
 
 
-class Idc(db.Model):
+class Idc(db.Model, Entity):
     __tablename__ = 'idcs'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
@@ -70,7 +72,7 @@ class Idc(db.Model):
         return '<Idc %r>' % self.name
 
 
-class Vhost(db.Model):
+class Vhost(db.Model, Entity):
     __tablename__ = 'vhosts'
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(64), unique=True)
@@ -81,7 +83,7 @@ class Vhost(db.Model):
         return '<Vhost %r>' % self.ip
 
 
-class Host(db.Model):
+class Host(db.Model, Entity):
     __tablename__ = 'hosts'
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(64), unique=True)
@@ -92,7 +94,7 @@ class Host(db.Model):
         return '<Host %r>' % self.ip
 
 
-class Role(db.Model):
+class Role(db.Model, Entity):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
@@ -115,7 +117,7 @@ class Role(db.Model):
         return '<Role %r>' % self.name
 
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model, Entity):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, index=True)
