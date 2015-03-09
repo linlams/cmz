@@ -14,7 +14,7 @@ handlers:
     class: logging.handlers.RotatingFileHandler
     formatter: simple
     mode: a
-    filename: ../logs/webapp.log
+    filename: ../webapp.log
     maxBytes: 1048576
     backupCount: 5
 

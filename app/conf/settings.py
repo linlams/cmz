@@ -47,11 +47,3 @@ try:
     from local_settings import *
 except ImportError:
     pass
-
-# __mclient__ = pymongo.MongoClient(MONGO_HOST, MONGO_PORT)
-
-# db = __mclient__[MONGO_DBNAME]
-
-# state_db = __mclient__[MONGO_STATE_DBNAME]
-# logger = logging.getLogger(__name__)
-# logger.error(state_db)
