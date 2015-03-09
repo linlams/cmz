@@ -9,6 +9,7 @@
         <thead>
             <tr>
                 <th>序号</th>
+                <th>IDC 机房</th>
                 <th>VIP</th>
                 <th>操作</th>
             </tr>
@@ -20,7 +21,7 @@
                 <td>{{vhost.idc.name}}</td>
                 <td>{{vhost.ip}}</td>
                 <td>
-                    <button type="button" onclick='modifyUser("{{vhost.id}}", "{{vhost.ip}}")' class="btn btn-danger">
+                    <button type="button" onclick='modifyUser("{{vhost.id}}", {{vhost.idc.id}}, "{{vhost.ip}}")' class="btn btn-danger">
                         修改</button>
                 </td>
             </tr>
@@ -71,9 +72,10 @@
             });
         }
 
-        function modifyUser(id, ip) {
+        function modifyUser(id, idc_id, ip) {
             $('#edit_panel_title').html('修改虚拟主机信息');
             $('#id').val(id);
+            $('#idc_id').val(idc_id);
             $('#ip').val(ip);
         }
 

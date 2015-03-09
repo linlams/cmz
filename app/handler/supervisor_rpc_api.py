@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import xmlrpclib
-from conf.settings import db, SUPERVISOR_CONFS_DIR, SUPERVISOR_RPC_URL_TEMPLATE, SUPERVISOR_RPC_KWARGS
+# from ..conf.settings import db, SUPERVISOR_CONFS_DIR, SUPERVISOR_RPC_URL_TEMPLATE, SUPERVISOR_RPC_KWARGS
+SUPERVISOR_RPC_URL_TEMPLATE = 'http://{username}:{password}@{host}:9001/RPC2'
+SUPERVISOR_RPC_KWARGS = {
+    'username': '',
+    'password': '',
+    'host': 'localhost',
+}
+
 import jinja2
 from tempfile import NamedTemporaryFile
 from subprocess import PIPE, Popen
@@ -19,20 +26,6 @@ HOST = '127.0.0.1'
 
 def process_already_exists(process_name, process_infos):
     return len(filter(lambda x: x['name'] == process_name, process_infos)) == 1
-
-
-businesses = list(db.business.find())
-mcs = list(db.memcached.find())
-for business in businesses:
-    def _eq_(x):
-        return x['ip'] == business['memcached']['ip'] and x['port'] == business['memcached']['port']
-
-    memcached = filter(_eq_, mcs)[0]
-    business['memcached'] = memcached
-
-
-# filename = '%s_memcached_%s_%d.conf' % (business['name'], business['lvs']['vip'], business['lvs']['port'])
-# dest_filename = '/etc/supervisord/conf.d/{conf_file}'.format(conf_file=filename)
 
 
 logger = logging.getLogger(__name__)
@@ -54,22 +47,19 @@ filename = '{business_name}_memcached_{vip}_{port}.conf'.format(business_name=''
 dest_filepath = '/etc/supervisord/conf.d/' + filename
 
 
-def ansible_format(pattern, content, dest_filepath):
+import .myansible as ansible
+
+def ansible_save(hosts, content, dest_filepath):
     with NamedTemporaryFile() as tempfile:
         tempfile.write(content)
         tempfile.flush()
-        logger.info(
-            'ansible {pattern} -m copy -a "src={src} dest={conf_file}" -s'.format(
-                pattern=pattern,
-                src=tempfile.name,
-                conf_file=dest_filepath,
-            ))
-        p = Popen('ansible {pattern} -m copy -a "src={src} dest={conf_file}" -s'.format(
-            pattern=pattern,
-            src=tempfile.name,
-            conf_file=dest_filepath,
-        ), stdin=PIPE, stdout=PIPE, shell=True)
-        p.wait()
+        module_name = 'copy'
+        module_args = 'src={src} dest={conf_file}" -s'.format(
+             src=tempfile.name,
+             conf_file=dest_filepath,
+        )
+        results = ansible.run(hosts, module_name, module_args)
+        return results
 
 
 class SupervisorController(object):
@@ -343,8 +333,7 @@ class SupervisorController(object):
                 if e.faultCode == xmlrpc.Faults.STILL_RUNNING:
                     self.logger.info('ERROR: process/group still running: %s' % name)
                 elif e.faultCode == xmlrpc.Faults.BAD_NAME:
-                    self.logger.info(
-                        "ERROR: no such process/group: %s" % name)
+                    self.logger.info("ERROR: no such process/group: %s" % name)
                 else:
                     raise
             else:
@@ -421,3 +410,12 @@ class SupervisorController(object):
             log(gname, "added process group")
 
         return self.status(gnames)
+
+if __name__ == '__main__':
+    host = '10.10.32.25'
+    hosts = '10.10.32.25,10.10.32.26,10.10.32.27'.split(',')
+    for host in hosts:
+        sc = SupervisorController(host)
+        print sc.status('all')
+        name = sc.status('all')[0]['name']
+        print sc.start([name])

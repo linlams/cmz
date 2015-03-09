@@ -45,6 +45,7 @@ if __name__ == '__main__':
     group = 'root'
     module_args="src=%s dest=%s owner=%s group=%s" % (src, dest, owner, group)
 
+    import pdb; pdb.set_trace()
     results = run(module_name, module_args, hosts='10.10.32.25,10.10.32.26'.split(','))
 
     for k in results.keys():

@@ -121,5 +121,17 @@
             $('input[name="' + name + '"][value="' + value +'"]').prop('checked', true);
         }
 
+        $(function(){
+            $('#vhost_port').change(function() {
+                var vhost_port = $(this).val();
+                $('#host_port').val(vhost_port);
+            });
+
+            $('#host_port').change(function() {
+                var host_port = $(this).val();
+                $('#vhost_port').val(host_port);
+            });
+        })
+
     </script>
-{% endblock %}
+{% endblock %}`
