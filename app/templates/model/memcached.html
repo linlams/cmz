@@ -40,7 +40,6 @@
                 <th>最大单值(MB)</th>
                 <th>真实IP</th>
                 <th>真实端口</th>
-                <th>主/备</th>
                 <th>状态</th>
                 <th>操作</th>
             </tr>
@@ -55,10 +54,29 @@
                 <td>{{mc.max_mem_size}}</td>
                 <td>{{mc.host.ip}}</td>
                 <td>{{mc.host_port}}</td>
-                <td>{{mc.master}}</td>
-                <td>{{mc.status}}</td>
                 <td>
-                    <button type="button" onclick='modify("{{mc.ip}}", "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_mem_size}}, "{{mc.master}}")' class="btn btn-danger">
+                    {% if mc.deployed %}
+                    已部署
+                    {%else%}
+                    未部署
+                    {%endif%} -
+                    {% if mc.status %}
+                    运行
+                    {%else%}
+                    关闭
+                    {%endif%}
+                </td>
+                <td>
+                    {% if not mc.deployed %}
+                    <div class="btn btn-xs btn-danger" onclick="deployMemcached({{mc.id}})">部署</div>
+                    {% endif %}
+                    {% if mc.status %}
+                    <div class="btn btn-xs btn-default" onclick="stopMemcached({{mc.id}})">停止</div>
+                    {% else %}
+                    <div class="btn btn-xs btn-info" onclick="startMemcached({{mc.id}})">启动</div>
+                    {% endif %}
+                    <div class="btn btn-xs btn-default" onclick='deleteMemcached({{mc.id}})'>删除</div>
+                    <button type="button" onclick='modifyMemcached("{{mc.id}}", "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_mem_size}}, "{{mc.master}}")' class="btn btn-danger btn-xs">
                         修改</button>
                 </td>
             </tr>
@@ -87,22 +105,41 @@
             return o;
         };
 
-        function deleteUser(id, mcname) {
-            if(!confirm("确定要删除" + "用户" + mcname +"吗？")) {
+        function deployMemcached(id) {
+            change_memcached('deploy', id)
+        }
+
+        function stopMemcached(id) {
+            if(!confirm("确定要{{entity_type}}吗？")) {
                 return false;
             }
+            change_memcached('stop', id)
+        }
+
+        function startMemcached(id) {
+            change_memcached('start', id)
+        }
+
+        function deleteMemcached(id) {
+            if(!confirm("确定要删除{{entity_type}}吗？")) {
+                return false;
+            }
+            change_memcached('delete', id);
+        }
+
+        function change_memcached(action, id){
             $.ajax({
-                url: '/mc/'+id,
-                type: 'DELETE',
+                url: '/memcached/' + action + '/'+id,
+                type: 'GET',
                 success: function(result) {
-                    if (result.success) {
+                    if (result) {
                         window.location.href = window.location.href;
                     }
                 }
             });
         }
 
-        function modify(id, project_id, vhost_id, vhost_port, host_id, host_port, max_mem_size, master) {
+        function modifyMemcached(id, project_id, vhost_id, vhost_port, host_id, host_port, max_mem_size, master) {
             $('#edit_panel_title').html('修改');
             $('#id').val(id);
             $('#project_id').val(project_id);
@@ -122,6 +159,9 @@
         }
 
         $(function(){
+            {% if form.errors|length != 0 %}
+                $('#myModal').modal('show');
+            {%endif%}
             $('#vhost_port').change(function() {
                 var vhost_port = $(this).val();
                 $('#host_port').val(vhost_port);

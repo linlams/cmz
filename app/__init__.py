@@ -42,6 +42,9 @@ def create_app(config_name):
     from .handler import handler as handler_blueprint
     app.register_blueprint(handler_blueprint, url_prefix="/handler")
 
+    from .memcached import memcached as memcached_blueprint
+    app.register_blueprint(memcached_blueprint, url_prefix="/memcached")
+
     # from .auth import auth as auth_blueprint
     # app.register_blueprint(auth_blueprint, url_prefix='/auth')
 

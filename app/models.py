@@ -43,28 +43,35 @@ class Memcached(db.Model, Entity):
     host_port = db.Column(db.Integer, unique=False)
     max_mem_size = db.Column(db.Integer, nullable=False)
 
-    master = db.Column(db.Boolean, nullable=False)
-
     vhost_id = db.Column(db.Integer, db.ForeignKey('vhosts.id'))
     vhost_port = db.Column(db.Integer, nullable=False)
 
-    APPLY_STATUS = 0
-    READY_STATUS = 1
-    ERROR_STATUS = 2
+    deployed = db.Column(db.Boolean)
+
+    STOPPED_STATUS = 0
+    RUNNING_STATUS = 1
     status = db.Column(db.Integer, nullable=False, default=0)
 
     __table_args__ = (
         db.UniqueConstraint("host_id", "host_port"),
+        db.UniqueConstraint("vhost_id", "vhost_port"),
     )
 
     def __repr__(self):
         return '<Memcached virtual %r:%r\treal %r:%r>' % (self.vhost.ip, self.vhost_port, self.host.ip, self.host_port)
 
 
+class Keepalived(db.Model, Entity):
+    __tablename__ = 'keepaliveds'
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(64), unique=True)
+
+
 class Idc(db.Model, Entity):
     __tablename__ = 'idcs'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
+    mem_size = db.Column(db.Integer)
     vhosts = db.relationship('Vhost', backref='idc', lazy='dynamic')
     hosts = db.relationship('Host', backref='idc', lazy='dynamic')
 

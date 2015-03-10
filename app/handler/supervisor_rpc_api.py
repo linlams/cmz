@@ -10,18 +10,10 @@ SUPERVISOR_RPC_KWARGS = {
 }
 
 import jinja2
-from tempfile import NamedTemporaryFile
 from subprocess import PIPE, Popen
 import logging
 from supervisor.options import make_namespec, split_namespec
 from supervisor import xmlrpc
-
-
-USERNAME = 'user'
-PASSWORD = '123'
-
-HOST = '127.0.0.1'
-# HOST = '10.10.32.28'
 
 
 def process_already_exists(process_name, process_infos):
@@ -29,11 +21,6 @@ def process_already_exists(process_name, process_infos):
 
 
 logger = logging.getLogger(__name__)
-
-
-# data = {'business': business}
-# pattern = business['memcached']['ip'],
-# template_filepath = SUPERVISOR_CONFS_DIR + '/memcached.conf.template'
 
 
 def src_content(data, template_filepath):
@@ -45,21 +32,6 @@ def src_content(data, template_filepath):
 
 filename = '{business_name}_memcached_{vip}_{port}.conf'.format(business_name='', vip='', port='')
 dest_filepath = '/etc/supervisord/conf.d/' + filename
-
-
-import .myansible as ansible
-
-def ansible_save(hosts, content, dest_filepath):
-    with NamedTemporaryFile() as tempfile:
-        tempfile.write(content)
-        tempfile.flush()
-        module_name = 'copy'
-        module_args = 'src={src} dest={conf_file}" -s'.format(
-             src=tempfile.name,
-             conf_file=dest_filepath,
-        )
-        results = ansible.run(hosts, module_name, module_args)
-        return results
 
 
 class SupervisorController(object):

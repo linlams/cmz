@@ -228,7 +228,6 @@ def memcached_list():
         mc.vhost_port = form.vhost_port.data
         mc.host_port = form.host_port.data
         mc.max_mem_size = form.max_mem_size.data
-        mc.master = form.master.data
 
         db.session.add(mc)
         if form.id.data:

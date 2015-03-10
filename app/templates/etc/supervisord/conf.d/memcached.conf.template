@@ -1,5 +1,5 @@
-[program:{{business.name}}_memcached_{{business.lvs.ip}}_{{business.lvs.port}}]
-command=/usr/bin/memcached -v -u nobody -l 0.0.0.0 -p {{business.memcached.port}} -m {{business.memcached.item_max_memory_in_megabytes}}
+[program:{{project.name}}_memcached_{{vhost.ip}}_{{vhost_port}}]
+command=/usr/bin/memcached -v -u nobody -l 0.0.0.0 -p {{host_port}} -m {{max_mem_size}}
 priority=999
 autostart=true
 startretries=3

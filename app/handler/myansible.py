@@ -1,4 +1,5 @@
 from ansible.runner import Runner
+from tempfile import NamedTemporaryFile
 import sys
 import tempfile
 from ansible.inventory import Inventory
@@ -36,6 +37,19 @@ def run(module_name, module_args, hosts):
     return ansible(**ansible_kwargs(module_name, module_args, hosts))
 
 
+def ansible_save(hosts, content, dest_filepath):
+    with NamedTemporaryFile() as tempfile:
+        tempfile.write(content)
+        tempfile.flush()
+        module_name = 'copy'
+        module_args = 'src={src} dest={conf_file}'.format(
+             src=tempfile.name,
+             conf_file=dest_filepath,
+        )
+        results = run(module_name, module_args, hosts)
+        return results
+
+
 if __name__ == '__main__':
     module_name="copy"
 
@@ -45,7 +59,6 @@ if __name__ == '__main__':
     group = 'root'
     module_args="src=%s dest=%s owner=%s group=%s" % (src, dest, owner, group)
 
-    import pdb; pdb.set_trace()
     results = run(module_name, module_args, hosts='10.10.32.25,10.10.32.26'.split(','))
 
     for k in results.keys():

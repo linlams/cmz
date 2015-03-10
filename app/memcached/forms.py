@@ -49,7 +49,6 @@ class HostForm(Form):
     id = HiddenField(u'ID')
     idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
     ip = StringField(u'IP', validators=[Required()])
-    mem_size = IntegerField(u'Mem Size', validators=[Required()])
     submit = SubmitField(u'提交')
 
 
@@ -68,14 +67,6 @@ class MemcachedForm(Form):
 
     def validate_vhost_port(self, field):
         if Memcached.query.filter_by(vhost_port=field.data).first():
-            if self.id.data:
-                mc = Memcached.query.get(self.id.data)
-                if mc.vhost_port == field.data:
-                    return True
-                else:
-                    raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s 或继续使用 %s' %
-                            (field.description, field.data, favorable_vhost_port, mc.vhost_port))
-
             mcs = Memcached.query.all()
             favorable_vhost_port = max(map(lambda x: x.vhost_port, mcs)) + 1
             raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s.' % (field.description, field.data, favorable_vhost_port))
