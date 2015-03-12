@@ -3,8 +3,8 @@ from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, SelectField,\
     HiddenField, IntegerField, RadioField
 from wtforms.validators import Required
-from ..models import Memcached
 from wtforms import ValidationError
+from ..models import Idc, Department, Project, Role, User
 
 
 DEPARTMENT_CHOICES = []
@@ -22,74 +22,60 @@ ROLE_CHOICES = []
 
 class DepartmentForm(Form):
     id = HiddenField(u'ID')
-    name = StringField(u'部门名称', validators=[Required()])
-    submit = SubmitField(u'提交')
+    name = StringField(u'部门英文缩写(创建后不可修改)', validators=[Required()])
+    en_name = StringField(u'部门名称', validators=[Required()])
+
+    def validate_name(self, field):
+        if Department.query.filter_by(name=field.name).first():
+            raise ValidationError(u'此英文缩写已经存在')
 
 
 class ProjectForm(Form):
     id = HiddenField(u'ID')
-    name = StringField(u'项目名称', validators=[Required()])
+    name = StringField(u'项目名称英文缩写(创建后不可修改)', validators=[Required()])
+    en_name = StringField(u'项目名称', validators=[Required()])
     department_id = SelectField(u'所属部门', validators=[Required()], choices=DEPARTMENT_CHOICES)
-    submit = SubmitField(u'提交')
+
+    def validate_name(self, field):
+        if Project.query.filter_by(name=field.name).first():
+            raise ValidationError(u'此英文缩写已经存在')
 
 
 class IdcForm(Form):
     id = HiddenField(u'ID')
-    name = StringField(u'机房名称', validators=[Required()])
+    name = StringField(u'机房名称英文缩写(创建后不可修改)', validators=[Required()])
+    en_name = StringField(u'机房名称', validators=[Required()])
+
+    def validate_name(self, field):
+        if self.id.data and Idc.query.filter_by(name=field.name).first():
+            raise ValidationError(u'此英文缩写已经存在')
 
 
 class VhostForm(Form):
     id = HiddenField(u'ID')
     idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
     ip = StringField(u'VIP', validators=[Required()])
-    submit = SubmitField(u'提交')
 
 
 class HostForm(Form):
     id = HiddenField(u'ID')
     idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
     ip = StringField(u'IP', validators=[Required()])
-    mem_size = IntegerField(u'Mem Size', validators=[Required()])
-    submit = SubmitField(u'提交')
-
-
-class MemcachedForm(Form):
-    id = HiddenField(u'ID')
-    project_id = SelectField(u'项目', validators=[Required()], choices=PROJECT_CHOICES)
-
-    idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
-
-    vhost_id = SelectField(u'虚拟主机', validators=[Required()], choices=VHOST_CHOICES)
-    vhost_port = IntegerField(u'虚拟主机端口', validators=[Required()])
-
-    host_id = SelectField(u'真实主机', validators=[Required()], choices=HOST_CHOICES)
-    host_port = IntegerField(u'真实主机端口', validators=[Required()])
-    max_mem_size = IntegerField(u'最大内存(MB)', validators=[Required()])
-
-    def validate_vhost_port(self, field):
-        if Memcached.query.filter_by(vhost_port=field.data).first():
-            if self.id.data:
-                mc = Memcached.query.get(self.id.data)
-                if mc.vhost_port == field.data:
-                    return True
-                else:
-                    raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s 或继续使用 %s' %
-                            (field.description, field.data, favorable_vhost_port, mc.vhost_port))
-
-            mcs = Memcached.query.all()
-            favorable_vhost_port = max(map(lambda x: x.vhost_port, mcs)) + 1
-            raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s.' % (field.description, field.data, favorable_vhost_port))
+    mem_size = IntegerField(u'内存(G)', validators=[Required()])
 
 
 class RoleForm(Form):
     id = HiddenField(u'ID')
-    name = StringField(u'角色', validators=[Required()])
-    submit = SubmitField(u'提交')
+    name = StringField(u'角色英文缩写(创建后不可修改)', validators=[Required()])
+    en_name = StringField(u'角色名称', validators=[Required()])
+
+    def validate_name(self, field):
+        if Role.query.filter_by(name=field.name).first():
+            raise ValidationError(u'此英文缩写已经存在')
 
 
 class UserForm(Form):
     id = HiddenField(u'ID')
-    username = StringField(u'用户名', validators=[Required()])
+    username = StringField(u'用户名(请与统一认证平台一致)', validators=[Required()])
     role_id = SelectField(u'角色', validators=[Required()], choices=ROLE_CHOICES)
     project_id = SelectField(u'所属项目', validators=[Required()], choices=PROJECT_CHOICES)
-    submit = SubmitField(u'提交')

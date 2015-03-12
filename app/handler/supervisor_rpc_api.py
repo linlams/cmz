@@ -52,6 +52,7 @@ class SupervisorController(object):
             status <name> <name>\tGet status for multiple named processes
             status\t\t\tGet all process status info
         '''
+        self.reread()
         all_infos = self.supervisor.getAllProcessInfo()
 
         if "all" in names:
@@ -108,6 +109,7 @@ class SupervisorController(object):
             start <name> <name>\tStart multiple processes or groups
             start all\t\tStart all processes
         '''
+        self.reread()
 
         if not names:
             self.logger.info("Error: start requires a process name")
@@ -158,6 +160,7 @@ class SupervisorController(object):
             self.logger.info("stop <name> <name>\tStop multiple processes or groups")
             self.logger.info("stop all\t\tStop all processes")
         '''
+        self.reread()
 
         results = []
 
@@ -230,6 +233,7 @@ class SupervisorController(object):
 
     def avail(self):
         "avail\t\t\tDisplay all configured processes"
+        self.reread()
         try:
             configinfo = self.supervisor.getAllConfigInfo()
         except xmlrpclib.Fault, e:

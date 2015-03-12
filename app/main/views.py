@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, url_for, flash, redirect
 from . import main
-from .forms import UserForm, DepartmentForm, MemcachedForm, ProjectForm,\
+from .forms import UserForm, DepartmentForm, ProjectForm,\
     VhostForm, HostForm, IdcForm
 
 from .. import db
@@ -54,6 +54,7 @@ def department_list():
             department = Department()
 
         department.name = form.name.data
+        department.en_name = form.en_name.data
 
         db.session.add(department)
         if form.id.data:
@@ -93,6 +94,7 @@ def project_list():
             project = Project()
 
         project.name = form.name.data
+        project.en_name = form.en_name.data
         project.department = Department.query.get(form.department_id.data)
 
         db.session.add(project)
@@ -128,6 +130,7 @@ def host_list():
 
         host.idc = Idc.query.get(form.idc_id.data)
         host.ip = form.ip.data
+        host.mem_size = form.mem_size.data
 
         db.session.add(host)
         if form.id.data:
@@ -158,6 +161,7 @@ def idc_list():
         else:
             idc = Idc()
         idc.name = form.name.data
+        idc.en_name = form.en_name.data
 
         db.session.add(idc)
 
@@ -206,43 +210,3 @@ def vhost_list():
 def delete_vhost(id):
     db.session.delete(Vhost.query.get(id))
     return redirect(url_for('main.vhost_list'))
-
-
-@main.route('/memcached', methods=['GET', 'POST'])
-def memcached_list():
-    form = MemcachedForm()
-    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
-    form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
-    form.vhost_id.choices = [(str(x.id), x.ip) for x in Vhost.query.all()]
-    form.host_id.choices = [(str(x.id), x.ip) for x in Host.query.all()]
-    form.csrf_enabled = True
-    if form.validate_on_submit():
-        if form.id.data:
-            mc = Memcached.query.get(form.id.data)
-        else:
-            mc = Memcached()
-
-        mc.project = Project.query.get(form.project_id.data)
-        mc.vhost = Vhost.query.get(form.vhost_id.data)
-        mc.host = Host.query.get(form.host_id.data)
-        mc.vhost_port = form.vhost_port.data
-        mc.host_port = form.host_port.data
-        mc.max_mem_size = form.max_mem_size.data
-
-        db.session.add(mc)
-        if form.id.data:
-            flash(u'修改成功!')
-        else:
-            flash(u'保存成功!')
-        return redirect(url_for('main.memcached_list'))
-
-    memcacheds = Memcached.query.all()
-    return render_template('model/memcached.html',
-                           memcacheds=memcacheds,
-                           form=form,)
-
-
-@main.route('/memcached/<int:id>', methods=['DELETE'])
-def delete_memcached(id):
-    db.session.delete(Memcached.query.get(id))
-    return redirect(url_for('main.memcached_list'))

@@ -28,13 +28,14 @@
         </div>
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="/memcached">Memcached</a></li>
-                <li><a href="/department">部门</a></li>
-                <li><a href="/project">项目</a></li>
-                <li><a href="/idc">IDC机房</a></li>
-                <li><a href="/vhost">虚拟主机</a></li>
-                <li><a href="/host">真实主机</a></li>
-                <li><a href="/user">用户</a></li>
+                <li><a href="{{ url_for('memcached.index') }}">Memcached</a></li>
+                <li><a href="{{ url_for('keepalived.index') }}">Keepalived</a></li>
+                <li><a href="{{ url_for('main.department_list') }}">部门</a></li>
+                <li><a href="{{ url_for('main.project_list') }}">项目</a></li>
+                <li><a href="{{ url_for('main.idc_list') }}">IDC机房</a></li>
+                <li><a href="{{ url_for('main.vhost_list') }}">虚拟主机</a></li>
+                <li><a href="{{ url_for('main.host_list') }}">真实主机</a></li>
+                <li><a href="{{ url_for('main.user_list') }}">用户</a></li>
             </ul>
             <p class="navbar-text navbar-right">
                 {#-- if current_user.is_authenticated() %}{{current_user["department"]["name"]}} - {{current_user["username"]}} | --#}

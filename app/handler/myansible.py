@@ -33,7 +33,7 @@ def ansible_kwargs(module_name, module_args, hosts=["10.10.32.27"]):
     )
 
 
-def run(module_name, module_args, hosts):
+def run(hosts, module_name, module_args, ):
     return ansible(**ansible_kwargs(module_name, module_args, hosts))
 
 
@@ -46,9 +46,18 @@ def ansible_save(hosts, content, dest_filepath):
              src=tempfile.name,
              conf_file=dest_filepath,
         )
-        results = run(module_name, module_args, hosts)
+        results = run(hosts, module_name, module_args, )
         return results
 
+
+def ansible_file(hosts, dest_filepath, state):
+    module_name = 'file'
+    module_args = 'path={path} state={state}'.format(
+         path=dest_filepath,
+         state=state,
+    )
+    results = run(hosts, module_name, module_args)
+    return results
 
 if __name__ == '__main__':
     module_name="copy"
@@ -59,7 +68,7 @@ if __name__ == '__main__':
     group = 'root'
     module_args="src=%s dest=%s owner=%s group=%s" % (src, dest, owner, group)
 
-    results = run(module_name, module_args, hosts='10.10.32.25,10.10.32.26'.split(','))
+    results = run('10.10.32.25,10.10.32.26'.split(','), module_name, module_args, )
 
     for k in results.keys():
         for ik in results[k].keys():

@@ -14,6 +14,7 @@ class Department(db.Model, Entity):
     __tablename__ = 'departments'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
+    en_name = db.Column(db.String(64), unique=True)
     projects = db.relationship('Project', backref='department', lazy='dynamic')
 
     def __repr__(self):
@@ -24,6 +25,7 @@ class Project(db.Model, Entity):
     __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
+    en_name = db.Column(db.String(64), unique=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     memcacheds = db.relationship('Memcached', backref='project', lazy='dynamic')
     members = db.relationship('User', backref='project', lazy='dynamic')
@@ -36,8 +38,7 @@ class Memcached(db.Model, Entity):
     __tablename__ = 'memcacheds'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-
-    idc_id = db.Column(db.Integer, db.ForeignKey('idcs.id'))
+    keepalived_id = db.Column(db.Integer, db.ForeignKey('keepaliveds.id'))
 
     host_id = db.Column(db.Integer, db.ForeignKey('hosts.id'))
     host_port = db.Column(db.Integer, unique=False)
@@ -64,16 +65,25 @@ class Memcached(db.Model, Entity):
 class Keepalived(db.Model, Entity):
     __tablename__ = 'keepaliveds'
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
     ip = db.Column(db.String(64), unique=True)
+    back_ip = db.Column(db.String(64), unique=True)
+    idc_id = db.Column(db.Integer, db.ForeignKey('idcs.id'))
+    memcacheds = db.relationship('Memcached', backref='keepalived', lazy='dynamic')
+
+
+    def __repr__(self):
+        return '<Memcached virtual %r:%r\treal %r:%r>' % (self.vhost.ip, self.vhost_port, self.host.ip, self.host_port)
 
 
 class Idc(db.Model, Entity):
     __tablename__ = 'idcs'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
-    mem_size = db.Column(db.Integer)
+    en_name = db.Column(db.String(64), unique=True)
     vhosts = db.relationship('Vhost', backref='idc', lazy='dynamic')
     hosts = db.relationship('Host', backref='idc', lazy='dynamic')
+    keepaliveds = db.relationship('Keepalived', backref='idc', lazy='dynamic')
 
     def __repr__(self):
         return '<Idc %r>' % self.name
@@ -95,7 +105,13 @@ class Host(db.Model, Entity):
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(64), unique=True)
     idc_id = db.Column(db.Integer, db.ForeignKey('idcs.id'))
+    mem_size = db.Column(db.Integer)
     memcacheds = db.relationship('Memcached', backref='host', lazy='dynamic')
+
+    @property
+    def allocated_mem_size(self):
+        allocated = reduce(lambda x, y: x+y, map(lambda x: x.max_mem_size, self.memcacheds), 0)/1024.0
+        return round(allocated, 3)
 
     def __repr__(self):
         return '<Host %r>' % self.ip
@@ -105,6 +121,7 @@ class Role(db.Model, Entity):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
+    en_name = db.Column(db.String(64), unique=True)
     users = db.relationship('User', backref='role', lazy='dynamic')
 
     @staticmethod

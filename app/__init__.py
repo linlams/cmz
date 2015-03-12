@@ -45,6 +45,9 @@ def create_app(config_name):
     from .memcached import memcached as memcached_blueprint
     app.register_blueprint(memcached_blueprint, url_prefix="/memcached")
 
+    from .keepalived import keepalived as keepalived_blueprint
+    app.register_blueprint(keepalived_blueprint, url_prefix="/keepalived")
+
     # from .auth import auth as auth_blueprint
     # app.register_blueprint(auth_blueprint, url_prefix='/auth')
 

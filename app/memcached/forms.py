@@ -13,43 +13,6 @@ IDCS_CHOICES = []
 VHOST_CHOICES = []
 HOST_CHOICES = []
 ROLE_CHOICES = []
-# DEPARTMENT_CHOICES = [(d.id, d.name) for d in Department.query.all()]
-# PROJECT_CHOICES = [(p.id, p.name) for p in Project.query.all()]
-# VHOST_CHOICES = [(v.id, v.name) for v in Vhost.query.all()]
-# HOST_CHOICES = [(h.id, h.name) for h in Host.query.all()]
-# ROLE_CHOICES = [(r.id, r.name) for r in Role.query.all()]
-
-
-class DepartmentForm(Form):
-    id = HiddenField(u'ID')
-    name = StringField(u'部门名称', validators=[Required()])
-    submit = SubmitField(u'提交')
-
-
-class ProjectForm(Form):
-    id = HiddenField(u'ID')
-    name = StringField(u'项目名称', validators=[Required()])
-    department_id = SelectField(u'所属部门', validators=[Required()], choices=DEPARTMENT_CHOICES)
-    submit = SubmitField(u'提交')
-
-
-class IdcForm(Form):
-    id = HiddenField(u'ID')
-    name = StringField(u'机房名称', validators=[Required()])
-
-
-class VhostForm(Form):
-    id = HiddenField(u'ID')
-    idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
-    ip = StringField(u'VIP', validators=[Required()])
-    submit = SubmitField(u'提交')
-
-
-class HostForm(Form):
-    id = HiddenField(u'ID')
-    idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
-    ip = StringField(u'IP', validators=[Required()])
-    submit = SubmitField(u'提交')
 
 
 class MemcachedForm(Form):
@@ -66,21 +29,19 @@ class MemcachedForm(Form):
     max_mem_size = IntegerField(u'最大内存(MB)', validators=[Required()])
 
     def validate_vhost_port(self, field):
-        if Memcached.query.filter_by(vhost_port=field.data).first():
+        if self.id.data:
+            mc = Memcached.query.get(self.id.data)
+            if mc.vhost_port != field.data:
+                raise ValidationError(u'本实例已经绑定了 %s(%s)' % (field.description, mc.vhost_port))
+            return
+
+        mc = Memcached.query.filter_by(vhost_port=field.data).first()
+        if mc is not None:
             mcs = Memcached.query.all()
             favorable_vhost_port = max(map(lambda x: x.vhost_port, mcs)) + 1
-            raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s.' % (field.description, field.data, favorable_vhost_port))
+            raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s.' % (field.label.text, field.data, favorable_vhost_port))
 
-
-class RoleForm(Form):
-    id = HiddenField(u'ID')
-    name = StringField(u'角色', validators=[Required()])
-    submit = SubmitField(u'提交')
-
-
-class UserForm(Form):
-    id = HiddenField(u'ID')
-    username = StringField(u'用户名', validators=[Required()])
-    role_id = SelectField(u'角色', validators=[Required()], choices=ROLE_CHOICES)
-    project_id = SelectField(u'所属项目', validators=[Required()], choices=PROJECT_CHOICES)
-    submit = SubmitField(u'提交')
+    def validate_vhost_id(self, field):
+        if self.id.data:
+            mc = Memcached.query.filter_by(vhost_port=field.data).first()
+        #if mc is not None:
