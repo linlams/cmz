@@ -47,7 +47,7 @@
                 <td>{{k.name}}</td>
                 <td>{{k.idc.en_name}}({{k.idc.name}})</td>
                 <td>{{k.ip}}</td>
-                <td>{% if k.master %} 主 {%else%} 备 {%endif%}</td>
+                <td>{{k.backup_ip}}</td>
                 <td>{{k.status}}</td>
                 <td>
                     {% if k.status %}
@@ -55,8 +55,6 @@
                     {% else %}
                     <div class="btn btn-xs btn-info" onclick="startKeepalived({{k.id}})">启动</div>
                     {% endif %}
-                    <button type="button" onclick='modifyKeepalived("{{k.id}}", {{k.host.idc.id}}, "{{k.project.id}}", "{{k.vhost.id}}", "{{k.vhost_port}}", "{{k.host.id}}", "{{k.host_port}}", {{k.max_mem_size}}, "{{k.master}}")' class="btn btn-success btn-xs">
-                        修改</button>
                     <div class="btn btn-xs btn-default" onclick='deleteKeepalived({{k.id}})'>删除</div>
                 </td>
             </tr>

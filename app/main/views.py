@@ -8,6 +8,11 @@ from .. import db
 from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc
 
 
+@main.route('/', methods=['GET', 'POST'])
+def index():
+    return redirect(url_for('memcached.index'))
+
+
 @main.route('/user', methods=['GET', 'POST'])
 def user_list():
     form = UserForm()

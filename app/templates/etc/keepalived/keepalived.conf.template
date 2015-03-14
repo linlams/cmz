@@ -1,0 +1,47 @@
+# Keepalived main configure file
+
+# global configure file
+
+global_defs {
+   router_id MEMCACHED_LVS
+}
+
+vrrp_instance memcached  {
+    state {% if master %} MASTER{% else %} BACKUP {% endif %}
+    interface {{host_interface}}
+    virtual_router_id 200
+    priority {{priority}}
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 08756CD2
+    }
+    virtual_ipaddress {
+        {% for vip in vips %}
+            {{ vip }}
+        {% endfor %}
+    }
+}
+
+
+{% for memcached in memcacheds %}
+
+virtual_server {{ memcached.vhost.ip }} {{ memcached.vhost_port }} { 
+    delay_loop 6
+    lb_algo wrr
+    lb_kind DR
+    nat_mask 255.255.255.0
+    persistence_timeout 60
+    protocol TCP
+
+    real_server {{ memcached.host.ip }} {{ memcached.host_port }} { 
+        weight 100
+        TCP_CHECK {
+            connect_timeout 10
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port {{ memcached.host_port }}
+        }
+    }
+}
+{% endfor %}

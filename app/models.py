@@ -67,13 +67,20 @@ class Keepalived(db.Model, Entity):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), unique=True)
     ip = db.Column(db.String(64), unique=True)
-    back_ip = db.Column(db.String(64), unique=True)
+    host_interface = db.Column(db.String(64))
+    backup_ip = db.Column(db.String(64), unique=True)
+    backup_host_interface = db.Column(db.String(64))
     idc_id = db.Column(db.Integer, db.ForeignKey('idcs.id'))
+    deployed = db.Column(db.Boolean, default=False)
+
+    STOPPED_STATUS = 0
+    RUNNING_STATUS = 1
+    status = db.Column(db.Integer, nullable=False, default=0)
+
     memcacheds = db.relationship('Memcached', backref='keepalived', lazy='dynamic')
 
-
-    def __repr__(self):
-        return '<Memcached virtual %r:%r\treal %r:%r>' % (self.vhost.ip, self.vhost_port, self.host.ip, self.host_port)
+    # def __repr__(self):
+    #    return '<Keepalived virtual %r:%r\treal %r:%r>' % (self.vhost.ip, self.vhost_port, self.host.ip, self.host_port)
 
 
 class Idc(db.Model, Entity):

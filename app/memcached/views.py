@@ -3,9 +3,9 @@ from flask import render_template, url_for, flash, redirect, jsonify
 from . import memcached
 from .forms import MemcachedForm
 from .. import db
-from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc
+from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc, Keepalived
 from ..handler.supervisor_rpc_api import SupervisorController
-from ..handler.myansible import ansible_save, ansible_file
+from ..handler.myansible import ansible_save, ansible_file, ansible_yum
 from ..util import json_response
 
 
@@ -20,6 +20,7 @@ def start(id):
     deploy(id)
     result = sc.update([process_name])
     result = sc.start([process_name])
+    print result
     if result[0]['statename'] == 'RUNNING':
         mc.status = 1
     return result[0]
@@ -98,21 +99,23 @@ def _undeploy(id):
 @memcached.route('/', methods=['GET', 'POST'])
 def index():
     form = MemcachedForm()
-    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
-    form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
+    form.idc_id.choices = [(str(x.id), x.en_name) for x in Idc.query.all()]
+    form.project_id.choices = [(str(x.id), x.en_name) for x in Project.query.all()]
     form.vhost_id.choices = [(str(x.id), x.ip) for x in Vhost.query.all()]
     form.host_id.choices = [(str(x.id), x.ip) for x in Host.query.all()]
+    form.keepalived_id.choices = [(str(x.id), x.name) for x in Keepalived.query.all()]
     form.csrf_enabled = True
     if form.validate_on_submit():
         if form.id.data:
             mc_id = form.id.data
             mc = Memcached.query.get(mc_id)
-            undeploy(mc_id)
-            stop(mc_id)
+            # undeploy(mc_id)
+            # stop(mc_id)
         else:
             mc = Memcached()
 
         mc.project = Project.query.get(form.project_id.data)
+        mc.keepalived = Keepalived.query.get(form.keepalived_id.data)
         mc.vhost = Vhost.query.get(form.vhost_id.data)
         mc.host = Host.query.get(form.host_id.data)
         mc.vhost_port = form.vhost_port.data
@@ -120,6 +123,9 @@ def index():
         mc.max_mem_size = form.max_mem_size.data
 
         db.session.add(mc)
+
+        ansible_yum([mc.host.ip], 'memcached', 'installed')
+
         if form.id.data:
             flash(u'修改成功!')
         else:

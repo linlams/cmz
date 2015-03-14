@@ -13,6 +13,7 @@ IDCS_CHOICES = []
 VHOST_CHOICES = []
 HOST_CHOICES = []
 ROLE_CHOICES = []
+KEEPALIVEDS_CHOICES = []
 
 
 class MemcachedForm(Form):
@@ -20,6 +21,7 @@ class MemcachedForm(Form):
     project_id = SelectField(u'项目', validators=[Required()], choices=PROJECT_CHOICES)
 
     idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
+    keepalived_id = SelectField(u'Keepalived名称', validators=[Required()], choices=KEEPALIVEDS_CHOICES)
 
     vhost_id = SelectField(u'虚拟主机', validators=[Required()], choices=VHOST_CHOICES)
     vhost_port = IntegerField(u'虚拟主机端口', validators=[Required()])
