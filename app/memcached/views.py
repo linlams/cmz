@@ -5,7 +5,7 @@ from .forms import MemcachedForm
 from .. import db
 from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc, Keepalived
 from ..handler.supervisor_rpc_api import SupervisorController
-from ..handler.myansible import ansible_save, ansible_file, ansible_yum
+from ..handler.myansible import ansible_save, ansible_file, ansible_yum, add_vip, remove_vip
 from ..util import json_response
 
 
@@ -17,6 +17,9 @@ def start(id):
             vport=mc.vhost_port,
         )
     sc = SupervisorController(mc.host.ip)
+
+    add_vip([mc.host.ip], mc.vhost.ip)
+
     deploy(id)
     result = sc.update([process_name])
     result = sc.start([process_name])
@@ -42,6 +45,10 @@ def stop(id):
     sc = SupervisorController(mc.host.ip)
     result = sc.update([process_name])
     result = sc.stop([process_name])
+
+    if Memcached.query.filter_by(vhost=mc.vhost).count() == 1:
+        remove_vip([mc.host.ip], mc.vhost.ip)
+
     undeploy(id)
     if result[0]['statename'] == 'STOPPED':
         mc.status = 0
@@ -56,6 +63,8 @@ def _stop(id):
 
 def deploy(id):
     mc = Memcached.query.get(id)
+    ansible_yum([mc.host.ip], 'memcached', 'installed')
+
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
             project_name=mc.project.name,
             vip=mc.vhost.ip,
@@ -123,8 +132,6 @@ def index():
         mc.max_mem_size = form.max_mem_size.data
 
         db.session.add(mc)
-
-        ansible_yum([mc.host.ip], 'memcached', 'installed')
 
         if form.id.data:
             flash(u'修改成功!')

@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from ansible.runner import Runner
 from tempfile import NamedTemporaryFile
 import sys
@@ -89,23 +90,28 @@ def ansible_lineinfile(hosts, module_args):
 def exist_vip(host, vip):
 
     result = ansible_lineinfile([host],
-        'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP=.*?)\s*{vip}\s*(.*)$" line="\1 {vip}$ \2" backrefs=yes state=present backup=yes'.format(vip=vip))
+        'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP=.*?)(\s*{vip}\s*)(.*)$" line="\1 \2\3" backrefs=yes state=present backup=yes'.format(vip=vip))
+    # 如果文件被修改就是已经存在此vip
     import pdb; pdb.set_trace()
     return result
 
 
 def add_vip(hosts, vip):
+    ansible_yum([host], 'lvsrealserver', 'installed')
     for host in hosts:
         if not exist_vip(host, vip):
             ansible_lineinfile([host], 
-                'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\"$" line="\1 {vip}\"" backrefs=yes backup=true'.format(vip=vip))
+                'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\"$" line="\1 {vip}\"" backrefs=yes state=present backup=true'.format(vip=vip))
+            ansible_service([host], 'lvs_realserver', 'restart')
 
 
 def remove_vip(hosts, vip):
+    ansible_yum([host], 'lvsrealserver', 'installed')
     for host in hosts:
         if exist_vip(host, vip):
             ansible_lineinfile([host], 
-                'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\s*{vip}\s*(.*\")$" line="\1 \2" backrefs=yes backup=true'.format(vip=vip))
+                'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\s*{vip}\s*(.*\")$" line="\1 \2" backrefs=yes state=present backup=true'.format(vip=vip))
+            ansible_service([host], 'lvs_realserver', 'restart')
 
 
 if __name__ == '__main__':

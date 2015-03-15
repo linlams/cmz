@@ -55,6 +55,8 @@
                     {% else %}
                     <div class="btn btn-xs btn-info" onclick="startKeepalived({{k.id}})">启动</div>
                     {% endif %}
+                    <button type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.name}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")' class="btn btn-danger">
+                        修改</button>
                     <div class="btn btn-xs btn-default" onclick='deleteKeepalived({{k.id}})'>删除</div>
                 </td>
             </tr>
@@ -120,18 +122,16 @@
                 }
             });
         }
-
-        function modifyKeepalived(id, idc_id, project_id, vhost_id, vhost_port, host_id, host_port, max_mem_size, master) {
+         
+        function modifyKeepalived(id, name, idc_id, ip, host_interface, backup_ip, backup_host_interface) {
             $('#edit_panel_title').html('修改');
             $('#id').val(id);
-            $('#idc_id').val(idc_id).attr('readonly', 'readonly');
-            $('#project_id').val(project_id).attr('readonly', 'readonly');
-            $('#vhost_id').val(vhost_id).attr('readonly', 'readonly');
-            $('#vhost_port').val(vhost_port).attr('readonly', 'readonly');
-            $('#host_id').val(host_id);
-            $('#host_port').val(host_port).attr('readonly', 'readonly');
-            $('#max_mem_size').val(max_mem_size);
-            setRadioValue('master', master);
+            $('#name').val(name);
+            $('#idc_id').val(idc_id);
+            $('#ip').val(ip);
+            $('#host_interface').val(host_interface);
+            $('#backup_ip').val(backup_ip);
+            $('#backup_host_interface').val(backup_host_interface);
             $('#myModal').modal('show');
         }
 
