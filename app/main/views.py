@@ -6,6 +6,7 @@ from .forms import UserForm, DepartmentForm, ProjectForm,\
 
 from .. import db
 from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc
+from flask.ext.login import login_required
 
 
 @main.route('/', methods=['GET', 'POST'])
@@ -14,6 +15,7 @@ def index():
 
 
 @main.route('/user', methods=['GET', 'POST'])
+@login_required
 def user_list():
     form = UserForm()
     form.role_id.choices = [(str(r.id), r.name) for r in Role.query.all()]
@@ -43,12 +45,14 @@ def user_list():
 
 
 @main.route('/user/<int:id>', methods=['DELETE'])
+@login_required
 def delete_user(id):
     db.session.delete(User.query.get(id))
     return redirect(url_for('main.user_list'))
 
 
 @main.route('/department', methods=['GET', 'POST'])
+@login_required
 def department_list():
     form = DepartmentForm()
     form.csrf_enabled = True
@@ -75,12 +79,14 @@ def department_list():
 
 
 @main.route('/department/<int:id>', methods=['DELETE'])
+@login_required
 def delete_department(id):
     db.session.delete(Department.query.get(id))
     return redirect(url_for('main.department_list'))
 
 
 @main.route('/project', methods=['GET', 'POST'])
+@login_required
 def project_list():
     form = ProjectForm()
     form.department_id.choices = [(str(x.id), x.name) for x in Department.query.all()]
@@ -117,12 +123,14 @@ def project_list():
 
 
 @main.route('/project/<int:id>', methods=['DELETE'])
+@login_required
 def delete_project(id):
     db.session.delete(Project.query.get(id))
     return redirect(url_for('main.project_list'))
 
 
 @main.route('/host', methods=['GET', 'POST'])
+@login_required
 def host_list():
     form = HostForm()
     form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
@@ -151,12 +159,14 @@ def host_list():
 
 
 @main.route('/host/<int:id>', methods=['DELETE'])
+@login_required
 def delete_host(id):
     db.session.delete(Host.query.get(id))
     return redirect(url_for('main.host_list'))
 
 
 @main.route('/idc', methods=['GET', 'POST'])
+@login_required
 def idc_list():
     form = IdcForm()
     form.csrf_enabled = True
@@ -184,6 +194,7 @@ def idc_list():
 
 
 @main.route('/vhost', methods=['GET', 'POST'])
+@login_required
 def vhost_list():
     form = VhostForm()
     form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
@@ -212,6 +223,7 @@ def vhost_list():
 
 
 @main.route('/vhost/<int:id>', methods=['DELETE'])
+@login_required
 def delete_vhost(id):
     db.session.delete(Vhost.query.get(id))
     return redirect(url_for('main.vhost_list'))

@@ -90,28 +90,51 @@ def ansible_lineinfile(hosts, module_args):
 def exist_vip(host, vip):
 
     result = ansible_lineinfile([host],
-        'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP=.*?)(\s*{vip}\s*)(.*)$" line="\1 \2\3" backrefs=yes state=present backup=yes'.format(vip=vip))
+        '''dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP=.*?)(\s*{vip}\s*)(.*)$" line="\\1 \\2\\3" backrefs=yes state=present backup=yes'''.format(vip=vip))
     # 如果文件被修改就是已经存在此vip
+    # {'dark': {}, 'contacted': {u'10.10.32.27': {u'msg': u'', 'invocation': {'module_name': 'lineinfile', 'module_args': u'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP=.*?)(\\s*10.10.32.111\\s*)(.*)$" line="\x01 \x02\x03" backrefs=yes state=present backup=yes'}, u'changed': False, u'backup': u''}}}
+    if 'contacted' in result and result['contacted'] and host in result['contacted']\
+            and result['contacted'][host]['changed']:
+        return True
+    else:
+        return False
     import pdb; pdb.set_trace()
     return result
 
 
 def add_vip(hosts, vip):
-    ansible_yum([host], 'lvsrealserver', 'installed')
+    results = []
     for host in hosts:
+        result = ansible_yum([host], 'lvsrealserver', 'installed')
+        results.append(result)
         if not exist_vip(host, vip):
-            ansible_lineinfile([host], 
-                'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\"$" line="\1 {vip}\"" backrefs=yes state=present backup=true'.format(vip=vip))
-            ansible_service([host], 'lvs_realserver', 'restart')
+            result = ansible_service([host], 'lvs_realserver', 'stopped')
+            results.append(result)
+            result = ansible_lineinfile([host], 
+                '''dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\\"$" line="\\1 {vip}\\"" backrefs=yes state=present backup=true'''.format(vip=vip))
+
+            results.append(result)
+            result = ansible_service([host], 'lvs_realserver', 'started')
+            results.append(result)
+    import pdb; pdb.set_trace()
+    return results
 
 
 def remove_vip(hosts, vip):
-    ansible_yum([host], 'lvsrealserver', 'installed')
+    results = []
     for host in hosts:
+        result = ansible_yum([host], 'lvsrealserver', 'installed')
+        results.append(result)
         if exist_vip(host, vip):
-            ansible_lineinfile([host], 
-                'dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\s*{vip}\s*(.*\")$" line="\1 \2" backrefs=yes state=present backup=true'.format(vip=vip))
-            ansible_service([host], 'lvs_realserver', 'restart')
+            result = ansible_service([host], 'lvs_realserver', 'stopped')
+            results.append(result)
+            result = ansible_lineinfile([host], 
+                '''dest=/etc/init.d/lvs_realserver regexp="^(SNS_VIP.*)\s*{vip}\s*(.*\\")$" line="\\1 \\2" backrefs=yes state=present backup=true'''.format(vip=vip))
+            results.append(result)
+            result = ansible_service([host], 'lvs_realserver', 'started')
+            results.append(result)
+    import pdb; pdb.set_trace()
+    return results
 
 
 if __name__ == '__main__':

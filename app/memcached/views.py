@@ -7,6 +7,7 @@ from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Id
 from ..handler.supervisor_rpc_api import SupervisorController
 from ..handler.myansible import ansible_save, ansible_file, ansible_yum, add_vip, remove_vip
 from ..util import json_response
+from flask.ext.login import login_required
 
 
 def start(id):
@@ -18,7 +19,7 @@ def start(id):
         )
     sc = SupervisorController(mc.host.ip)
 
-    add_vip([mc.host.ip], mc.vhost.ip)
+    results = add_vip([mc.host.ip], mc.vhost.ip)
 
     deploy(id)
     result = sc.update([process_name])
@@ -47,7 +48,7 @@ def stop(id):
     result = sc.stop([process_name])
 
     if Memcached.query.filter_by(vhost=mc.vhost).count() == 1:
-        remove_vip([mc.host.ip], mc.vhost.ip)
+        results = remove_vip([mc.host.ip], mc.vhost.ip)
 
     undeploy(id)
     if result[0]['statename'] == 'STOPPED':
@@ -106,6 +107,7 @@ def _undeploy(id):
 
 
 @memcached.route('/', methods=['GET', 'POST'])
+@login_required
 def index():
     form = MemcachedForm()
     form.idc_id.choices = [(str(x.id), x.en_name) for x in Idc.query.all()]

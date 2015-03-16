@@ -19,23 +19,14 @@ def login():
         req.add_header('Referer', KSSO_LOCAL_URL)
         sss = urllib2.urlopen(req)
         result = json.loads(sss.read())
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
 
         if result['result'] and result['detail']['departmentId__departmentName'] == u'运维部':
-            # session['user'] = {
-            #     "username": result['user'],
-            #     "phone": result['detail']['phone'],
-            #     "department": {
-            #         "name": result['detail']['departmentId__departmentName'],
-            #         "en_name": result['detail']['departmentId__enName']
-            #     },
-            #     "email": result['detail']['email']
-            # }
             user = User.query.filter_by(username=result['user']).first()
             login_user(user)
             return redirect(KSSO_LOCAL_URL)
         else:
-            return "ABC"
+            return u"你不是能正常登录此网站，请联系系统管理员"
 
     else:
         return redirect(
@@ -47,7 +38,6 @@ def login():
                 # )
             )
         )
-    #return redirect(request.args.get('next') or url_for('main.index'))
 
 
 @auth.route('/logout')
