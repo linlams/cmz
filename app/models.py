@@ -6,8 +6,8 @@ from datetime import datetime
 
 class Entity(object):
     removable = db.Column(db.Boolean, nullable=False, default=True)
-    add_time = db.Column(db.DateTime, nullable=False, default=datetime.now())
-    modify_time = db.Column(db.DateTime, nullable=False, default=datetime.now())
+    add_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    modify_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 
 class Department(db.Model, Entity):
@@ -115,9 +115,14 @@ class Host(db.Model, Entity):
     mem_size = db.Column(db.Integer)
     memcacheds = db.relationship('Memcached', backref='host', lazy='dynamic')
 
-    @property
-    def allocated_mem_size(self):
-        allocated = reduce(lambda x, y: x+y, map(lambda x: x.max_mem_size, self.memcacheds), 0)/1024.0
+    def allocated_mem_size(self, mc_id=None):
+        allocated = reduce(lambda x, y: x+y,
+            map(lambda x: x.max_mem_size,
+                filter(lambda x: mc_id is None or int(mc_id) != x.id,
+                    self.memcacheds
+                )
+            ), 0
+        )/1024.0
         return round(allocated, 3)
 
     def __repr__(self):
@@ -154,6 +159,17 @@ class User(UserMixin, db.Model, Entity):
     username = db.Column(db.String(64), unique=True, index=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    logs = db.relationship('Log', backref='user', lazy='dynamic')
+
+    def __repr__(self):
+        return '<User %r>' % self.username
+
+
+class Log(db.Model, Entity):
+    __tablename__ = 'logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    log_info = db.Column(db.String(4096))
 
     def __repr__(self):
         return '<User %r>' % self.username

@@ -47,7 +47,7 @@
                 <td>{{host.idc.name}}</td>
                 <td>{{host.ip}}</td>
                 <td>{{host.mem_size}}G</td>
-                <td>{{host.allocated_mem_size}}G</td>
+                <td>{{host.allocated_mem_size()}}G</td>
                 <td>
                     <button type="button" onclick='modify("{{host.id}}", {{host.idc.id}}, "{{host.ip}}", {{host.mem_size}})' class="btn btn-danger">
                         修改</button>

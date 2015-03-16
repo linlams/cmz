@@ -53,7 +53,7 @@
 
 {% block content %}
 <div class="container">
-    {% for message in get_flashed_messages() %}
+    {% for message in get_flashed_messages(category_filter=["message"]) %}
     <div class="alert alert-success">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         {{ message }}
@@ -61,6 +61,20 @@
     {% endfor %}
 
     {% block page_content %}{% endblock %}
+    <div class="clearfix">
+    </div>
+    {% set logs = get_flashed_messages(category_filter=["ansible_results"]) %}
+    {% if logs|length > 0 %}
+        {% for log in logs %}
+        <div class="panel panel-info">
+            <div class="panel-body">
+                <pre>
+                {{ log }}
+                </pre>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
 </div>
 {% endblock %}
 

@@ -64,7 +64,7 @@ def _stop(id):
 
 def deploy(id):
     mc = Memcached.query.get(id)
-    ansible_yum([mc.host.ip], 'memcached', 'installed')
+    ansible_yum([mc.host.ip], 'memcached', 'installed'),
 
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
             project_name=mc.project.name,
@@ -109,6 +109,7 @@ def _undeploy(id):
 @memcached.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+    # import pdb; pdb.set_trace()
     form = MemcachedForm()
     form.idc_id.choices = [(str(x.id), x.en_name) for x in Idc.query.all()]
     form.project_id.choices = [(str(x.id), x.en_name) for x in Project.query.all()]

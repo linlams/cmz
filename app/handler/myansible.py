@@ -6,11 +6,21 @@ import tempfile
 from ansible.inventory import Inventory
 from ansible.inventory.host import Host
 from ansible.inventory.group import Group
+from flask import flash
+from flask.ext.login import current_user
+import json
+from ..models import Log, User
+from .. import db
 
 def ansible(**kwargs):
     results = Runner(
             **kwargs
     ).run()
+    rjson = json.dumps(results, indent=2)
+    flash(rjson, 'ansible_results')
+    import pdb; pdb.set_trace()
+    user = User.query.get(current_user.id)
+    db.session.add(Log(user=user, log_info=rjson))
     return results
 
 
@@ -98,8 +108,6 @@ def exist_vip(host, vip):
         return True
     else:
         return False
-    import pdb; pdb.set_trace()
-    return result
 
 
 def add_vip(hosts, vip):
@@ -116,7 +124,6 @@ def add_vip(hosts, vip):
             results.append(result)
             result = ansible_service([host], 'lvs_realserver', 'started')
             results.append(result)
-    import pdb; pdb.set_trace()
     return results
 
 
@@ -133,7 +140,6 @@ def remove_vip(hosts, vip):
             results.append(result)
             result = ansible_service([host], 'lvs_realserver', 'started')
             results.append(result)
-    import pdb; pdb.set_trace()
     return results
 
 

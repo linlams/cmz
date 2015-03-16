@@ -11,6 +11,7 @@ from flask.ext.login import login_required
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
+    # return render_template('index.html')
     return redirect(url_for('memcached.index'))
 
 

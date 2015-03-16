@@ -3,7 +3,7 @@ from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, SelectField,\
     HiddenField, IntegerField, RadioField
 from wtforms.validators import Required
-from ..models import Memcached
+from ..models import Memcached, Host
 from wtforms import ValidationError
 
 
@@ -47,3 +47,10 @@ class MemcachedForm(Form):
         if self.id.data:
             mc = Memcached.query.filter_by(vhost_port=field.data).first()
         #if mc is not None:
+
+    def validate_max_mem_size(self, field):
+        host = Host.query.get(self.host_id.data)
+        available_mem_size = host.mem_size - host.allocated_mem_size(self.id.data)
+        if available_mem_size < (int(field.data)/1024.0):
+            raise ValidationError(u'%s(%.3fG) 已经使用了%.3fG. 还有%.0fM可用于分配.' % (host.ip, host.mem_size, host.allocated_mem_size(self.id.data), available_mem_size*1024))
+
