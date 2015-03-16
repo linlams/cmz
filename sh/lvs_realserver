@@ -1,0 +1,81 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides: lvs_realserver
+# Default-Start:  3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: LVS real_server service scripts
+# Description: LVS real_server start and stop controller
+### END INIT INFO
+#  Copyright 2013 kisops.com
+#
+#  chkconfig: - 20 80
+#
+#  Author:  k_ops_yw@ijinshan.com
+
+#有多个虚拟IP，以空格分隔
+SNS_VIP="          10.10.32.111"
+. /etc/rc.d/init.d/functions
+if [[ -z "$SNS_VIP"  ]];then
+    echo 'Please set vips in '$0' with SNS_VIP!'
+fi
+
+start(){
+num=0
+for loop in $SNS_VIP
+do
+    echo $num  $loop
+    /sbin/ifconfig lo:$num $loop netmask 255.255.255.255 broadcast $loop up
+    /sbin/route add -host $loop dev lo:$num
+    ((num++))
+done
+echo "1" >/proc/sys/net/ipv4/conf/lo/arp_ignore
+echo "2" >/proc/sys/net/ipv4/conf/lo/arp_announce
+echo "1" >/proc/sys/net/ipv4/conf/all/arp_ignore
+echo "2" >/proc/sys/net/ipv4/conf/all/arp_announce
+sysctl -e -p >/dev/null 2>&1
+}
+
+stop(){
+num=0
+for loop in $SNS_VIP
+do
+    echo $num  $loop
+    /sbin/ifconfig lo:$num down
+    /sbin/route del -host $loop >/dev/null 2>&1
+    ((num++))
+done
+echo "0" >/proc/sys/net/ipv4/conf/lo/arp_ignore
+echo "0" >/proc/sys/net/ipv4/conf/lo/arp_announce
+echo "0" >/proc/sys/net/ipv4/conf/all/arp_ignore
+echo "0" >/proc/sys/net/ipv4/conf/all/arp_announce
+sysctl -e -p >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        start
+        echo "RealServer Start OK"
+        ;;
+    status)
+        ip a|grep -e 'scope global lo:[0-9]$'
+        if [ $? -eq 0 ] ; then
+            echo  "lvs realservar is started"
+            exit 0
+        else 
+            echo  "lvs realservar is stopped"
+            exit 1
+        fi
+        ;;
+    stop)
+        stop
+        echo "RealServer Stoped"
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+         echo "Usage: $0 {start|stop|restart}"
+         exit 1
+esac
+exit 0
