@@ -129,23 +129,32 @@ class Host(db.Model, Entity):
         return '<Host %r>' % self.ip
 
 
+class Permission:
+    ADMINISTER = 0x80
+
+
 class Role(db.Model, Entity):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(64), unique=True)
     name = db.Column(db.String(64), unique=True)
+    default = db.Column(db.Boolean, default=False, index=True)
+    permissions = db.Column(db.Integer)
     users = db.relationship('User', backref='role', lazy='dynamic')
 
     @staticmethod
     def insert_roles():
-        roles = [
-            'User',
-            'Administrator',
-        ]
+        roles = {
+            u'普通用户':('normal', 0x00, True),
+            u'管理员':('admin', 0xff, Flase),
+        }
         for r in roles:
             role = Role.query.filter_by(name=r).first()
             if role is None:
                 role = Role(name=r)
+            role.code = roles[r][0]
+            role.permissions = roles[r][1]
+            role.default = roles[r][2]
             db.session.add(role)
         db.session.commit()
 
@@ -160,6 +169,21 @@ class User(UserMixin, db.Model, Entity):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     logs = db.relationship('Log', backref='user', lazy='dynamic')
+
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        if self.role is None:
+            if self.email == current_app.config['ADMIN']:
+                self.role = Role.query.filter_by(permissions=0xff).first()
+            else:
+                self.role = Role.query.filter_by(default=True).first()
+
+    def can(self, permissions):
+        return self.role is not None and \
+            (self.role.permissions & permissions) == permissions
+
+    def is_administrator(self):
+        return self.can(Permission.ADMINISTER)
 
     def __repr__(self):
         return '<User %r>' % self.username

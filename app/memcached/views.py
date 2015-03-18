@@ -7,6 +7,7 @@ from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Id
 from ..handler.supervisor_rpc_api import SupervisorController
 from ..handler.myansible import ansible_save, ansible_file, ansible_yum, add_vip, remove_vip
 from ..util import json_response
+from ..decorators import admin_required, permission_required
 from flask.ext.login import login_required
 
 
@@ -30,6 +31,7 @@ def start(id):
 
 
 @memcached.route('/start/<int:id>', methods=['GET', 'POST'])
+@admin_required
 @json_response
 def _start(id):
     return start(id)
@@ -73,6 +75,7 @@ def stop(id):
 
 
 @memcached.route('/stop/<int:id>', methods=['GET', 'POST'])
+@admin_required
 @json_response
 def _stop(id):
     return stop(id)
@@ -165,6 +168,7 @@ def index():
 
 
 @memcached.route('/delete/<int:id>', methods=['GET', 'POST'])
+@admin_required
 def delete(id):
     undeploy(id)
     stop(id)
