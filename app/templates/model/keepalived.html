@@ -44,8 +44,8 @@
         <tbody>
         {% for k in keepaliveds %}
             <tr>
-                <td>{{k.name}}</td>
-                <td>{{k.idc.en_name}}</td>
+                <td>{{k.code}}</td>
+                <td>{{k.idc.name}}</td>
                 <td>{{k.ip}} ({{k.host_interface}})</td>
                 <td>{{k.backup_ip}} ({{k.backup_host_interface}})</td>
                 <td>{{k.status}}</td>
@@ -55,7 +55,7 @@
                     {% else %}
                     <div class="btn btn-xs btn-info" onclick="startKeepalived({{k.id}})">启动</div>
                     {% endif %}
-                    <button type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.name}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")' class="btn btn-danger">
+                    <button type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.code}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")' class="btn btn-danger">
                         修改</button>
                     <div class="btn btn-xs btn-default" onclick='deleteKeepalived({{k.id}})'>删除</div>
                 </td>

@@ -80,7 +80,7 @@ def deploy(keepalived):
 @keepalived.route('/', methods=['GET'])
 def index():
     form = KeepalivedForm()
-    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
+    form.idc_id.choices = [(str(x.id), x.code) for x in Idc.query.all()]
     form.csrf_enabled = True
 
     keepaliveds = Keepalived.query.all()
@@ -93,7 +93,7 @@ def index():
 def save():
     '保存keepalived信息'
     form = KeepalivedForm()
-    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
+    form.idc_id.choices = [(str(x.id), x.code) for x in Idc.query.all()]
     form.csrf_enabled = True
     if form.validate_on_submit():
         if form.id.data:

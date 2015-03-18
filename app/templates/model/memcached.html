@@ -47,8 +47,8 @@
         <tbody>
         {% for mc in memcacheds %}
             <tr id="e_{{mc.id}}">
-                <td>{{mc.project.name}}</td>
-                <td>{{mc.project.department.name}}</td>
+                <td>{{mc.project.code}}</td>
+                <td>{{mc.project.department.code}}</td>
                 <td>{{mc.vhost.ip}}</td>
                 <td>{{mc.vhost_port}}</td>
                 <td>{{mc.max_mem_size}}</td>

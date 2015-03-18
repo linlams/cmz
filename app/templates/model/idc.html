@@ -41,10 +41,10 @@
         <tbody>
         {% for idc in entities %}
             <tr>
-                <td>{{idc.en_name}}</td>
                 <td>{{idc.name}}</td>
+                <td>{{idc.code}}</td>
                 <td>
-                    <button type="button" onclick='modify_entity("{{idc.id}}", "{{idc.name}}", "{{idc.en_name}}")' class="btn btn-danger">
+                    <button type="button" onclick='modify_entity("{{idc.id}}", "{{idc.code}}", "{{idc.name}}")' class="btn btn-danger">
                         修改</button>
                 </td>
             </tr>
@@ -87,11 +87,11 @@
             });
         }
 
-        function modify_entity(id, name, en_name) {
+        function modify_entity(id, name, name) {
             $('#edit_panel_title').html('修改');
             $('#id').val(id);
             $('#name').val(name).attr('readonly', 'readonly');
-            $('#en_name').val(en_name);
+            $('#name').val(name);
             $('#myModal').modal('show');
         }
 

@@ -13,25 +13,25 @@ class Entity(object):
 class Department(db.Model, Entity):
     __tablename__ = 'departments'
     id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(64), unique=True)
     name = db.Column(db.String(64), unique=True)
-    en_name = db.Column(db.String(64), unique=True)
     projects = db.relationship('Project', backref='department', lazy='dynamic')
 
     def __repr__(self):
-        return '<Department %r>' % self.name
+        return '<Department %r>' % self.code
 
 
 class Project(db.Model, Entity):
     __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(64), unique=True)
     name = db.Column(db.String(64), unique=True)
-    en_name = db.Column(db.String(64), unique=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     memcacheds = db.relationship('Memcached', backref='project', lazy='dynamic')
     members = db.relationship('User', backref='project', lazy='dynamic')
 
     def __repr__(self):
-        return '<Project %r>' % self.name
+        return '<Project %r>' % self.code
 
 
 class Memcached(db.Model, Entity):
@@ -86,14 +86,14 @@ class Keepalived(db.Model, Entity):
 class Idc(db.Model, Entity):
     __tablename__ = 'idcs'
     id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(64), unique=True)
     name = db.Column(db.String(64), unique=True)
-    en_name = db.Column(db.String(64), unique=True)
     vhosts = db.relationship('Vhost', backref='idc', lazy='dynamic')
     hosts = db.relationship('Host', backref='idc', lazy='dynamic')
     keepaliveds = db.relationship('Keepalived', backref='idc', lazy='dynamic')
 
     def __repr__(self):
-        return '<Idc %r>' % self.name
+        return '<Idc %r>' % self.code
 
 
 class Vhost(db.Model, Entity):
@@ -132,8 +132,8 @@ class Host(db.Model, Entity):
 class Role(db.Model, Entity):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(64), unique=True)
     name = db.Column(db.String(64), unique=True)
-    en_name = db.Column(db.String(64), unique=True)
     users = db.relationship('User', backref='role', lazy='dynamic')
 
     @staticmethod
@@ -150,7 +150,7 @@ class Role(db.Model, Entity):
         db.session.commit()
 
     def __repr__(self):
-        return '<Role %r>' % self.name
+        return '<Role %r>' % self.code
 
 
 class User(UserMixin, db.Model, Entity):

@@ -41,7 +41,7 @@ from . import views
 #                 "phone": result['detail']['phone'],
 #                 "department": {
 #                     "name": result['detail']['departmentId__departmentName'],
-#                     "en_name": result['detail']['departmentId__enName']
+#                     "name": result['detail']['departmentId__enName']
 #                 },
 #                 "email": result['detail']['email']
 #             }

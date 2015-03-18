@@ -13,7 +13,7 @@ from flask.ext.login import login_required
 def start(id):
     mc = Memcached.query.get(id)
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
-            project_name=mc.project.name,
+            project_name=mc.project.code,
             vip=mc.vhost.ip,
             vport=mc.vhost_port,
         )
@@ -40,7 +40,7 @@ def _start(id):
 def status(id):
     mc = Memcached.query.get(id)
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
-            project_name=mc.project.name,
+            project_name=mc.project.code,
             vip=mc.vhost.ip,
             vport=mc.vhost_port,
         )
@@ -55,7 +55,7 @@ def status(id):
 def stop(id):
     mc = Memcached.query.get(id)
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
-            project_name=mc.project.name,
+            project_name=mc.project.code,
             vip=mc.vhost.ip,
             vport=mc.vhost_port,
         )
@@ -83,7 +83,7 @@ def deploy(id):
     ansible_yum([mc.host.ip], 'memcached', 'installed'),
 
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
-            project_name=mc.project.name,
+            project_name=mc.project.code,
             vip=mc.vhost.ip,
             vport=mc.vhost_port,
         )
@@ -106,7 +106,7 @@ def _deploy(id):
 def undeploy(id):
     mc = Memcached.query.get(id)
     process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
-            project_name=mc.project.name,
+            project_name=mc.project.code,
             vip=mc.vhost.ip,
             vport=mc.vhost_port,
         )
@@ -127,8 +127,8 @@ def _undeploy(id):
 def index():
     # import pdb; pdb.set_trace()
     form = MemcachedForm()
-    form.idc_id.choices = [(str(x.id), x.en_name) for x in Idc.query.all()]
-    form.project_id.choices = [(str(x.id), x.en_name) for x in Project.query.all()]
+    form.idc_id.choices = [(str(x.id), x.name) for x in Idc.query.all()]
+    form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
     form.vhost_id.choices = [(str(x.id), x.ip) for x in Vhost.query.all()]
     form.host_id.choices = [(str(x.id), x.ip) for x in Host.query.all()]
     form.keepalived_id.choices = [(str(x.id), x.name) for x in Keepalived.query.all()]

@@ -63,8 +63,8 @@ def department_list():
         else:
             department = Department()
 
+        department.code = form.code.data
         department.name = form.name.data
-        department.en_name = form.en_name.data
 
         db.session.add(department)
         if form.id.data:
@@ -96,17 +96,10 @@ def project_list():
         if form.id.data:
             project = Project.query.get(form.id.data)
         else:
-            if Project.query.filter_by(name=form.name.data).first() is not None:
-                flash(u'已经存在同名的了')
-                projects = Project.query.all()
-                return render_template('model/project.html',
-                                       projects=projects,
-                                       form=form,)
-
             project = Project()
 
+        project.code = form.code.data
         project.name = form.name.data
-        project.en_name = form.en_name.data
         project.department = Department.query.get(form.department_id.data)
 
         db.session.add(project)
@@ -176,8 +169,8 @@ def idc_list():
             idc = Idc.query.get(form.id.data)
         else:
             idc = Idc()
+        idc.code = form.code.data
         idc.name = form.name.data
-        idc.en_name = form.en_name.data
 
         db.session.add(idc)
 
