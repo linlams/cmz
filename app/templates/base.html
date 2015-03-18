@@ -68,9 +68,7 @@
         {% for log in logs %}
         <div class="panel panel-info">
             <div class="panel-body">
-                <pre>
-                {{ log }}
-                </pre>
+                <pre>{{ log }}</pre>
             </div>
         </div>
         {% endfor %}
@@ -80,6 +78,7 @@
 
 {% block scripts %}
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script> 
+    <script src="{{ url_for('static', filename='js/jquery.blockUI.js') }}"</script>
     <script src="{{ url_for('static', filename='js/jquery-ui-1.10.3.custom.min.js') }}"></script> 
     <script src="{{ url_for('static', filename='js/underscore-min.js') }}"></script> 
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script> 

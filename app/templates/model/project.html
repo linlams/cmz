@@ -31,8 +31,8 @@
     <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>序号</th>
                 <th>项目名称</th>
+                <th>项目编码</th>
                 <th>所属部门</th>
                 <th>操作</th>
             </tr>
@@ -40,9 +40,9 @@
         <tbody>
         {% for project in projects %}
             <tr>
-                <td>{{loop.index}}</td>
-                <td>{{project.en_name}}({{project.name}})</td>
-                <td>{{project.department.name}}</td>
+                <td>{{project.en_name}}</td>
+                <td>{{project.name}}</td>
+                <td>{{project.department.en_name}}</td>
                 <td>
                     <button type="button" onclick='modifyUser("{{project.id}}", "{{project.name}}", "{{project.en_name}}", "{{project.department.id}}")' class="btn btn-danger">
                         修改</button>

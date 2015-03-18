@@ -44,7 +44,7 @@
         {% for host in hosts %}
             <tr>
                 <td>{{loop.index}}</td>
-                <td>{{host.idc.name}}</td>
+                <td>{{host.idc.en_name}}</td>
                 <td>{{host.ip}}</td>
                 <td>{{host.mem_size}}G</td>
                 <td>{{host.allocated_mem_size()}}G</td>

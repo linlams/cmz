@@ -45,9 +45,9 @@
         {% for k in keepaliveds %}
             <tr>
                 <td>{{k.name}}</td>
-                <td>{{k.idc.en_name}}({{k.idc.name}})</td>
-                <td>{{k.ip}}</td>
-                <td>{{k.backup_ip}}</td>
+                <td>{{k.idc.en_name}}</td>
+                <td>{{k.ip}} ({{k.host_interface}})</td>
+                <td>{{k.backup_ip}} ({{k.backup_host_interface}})</td>
                 <td>{{k.status}}</td>
                 <td>
                     {% if k.status %}

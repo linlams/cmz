@@ -18,7 +18,7 @@ def ansible(**kwargs):
     ).run()
     rjson = json.dumps(results, indent=2)
     flash(rjson, 'ansible_results')
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     user = User.query.get(current_user.id)
     db.session.add(Log(user=user, log_info=rjson))
     return results

@@ -46,7 +46,7 @@
         </thead>
         <tbody>
         {% for mc in memcacheds %}
-            <tr>
+            <tr id="e_{{mc.id}}">
                 <td>{{mc.project.name}}</td>
                 <td>{{mc.project.department.name}}</td>
                 <td>{{mc.vhost.ip}}</td>
@@ -54,19 +54,10 @@
                 <td>{{mc.max_mem_size}}</td>
                 <td>{{mc.host.ip}}</td>
                 <td>{{mc.host_port}}</td>
-                <td>
-                    {% if mc.status %}
-                    运行
-                    {%else%}
-                    关闭
-                    {%endif%}
+                <td class='status'>
                 </td>
-                <td>
-                    {% if mc.status %}
+                <td class='operations'>
                     <div class="btn btn-xs btn-danger" onclick="stopMemcached({{mc.id}})">停止</div>
-                    {% else %}
-                    <div class="btn btn-xs btn-info" onclick="startMemcached({{mc.id}})">启动</div>
-                    {% endif %}
                     <button type="button" onclick='modifyMemcached("{{mc.id}}", {{mc.host.idc.id}}, "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_mem_size}}, "{{mc.master}}")' class="btn btn-success btn-xs">
                         修改</button>
                     <div class="btn btn-xs btn-default" onclick='deleteMemcached({{mc.id}})'>删除</div>
@@ -124,10 +115,12 @@
         }
 
         function change_memcached(action, id){
+            $.blockUI({message: '系统正在调用ansible进行事务处理，请耐心等待大约10秒'})
             $.ajax({
                 url: '/memcached/' + action + '/'+id,
                 type: 'GET',
                 success: function(result) {
+                    debugger;
                     if (result) {
                         window.location.href = window.location.href;
                     }
@@ -155,7 +148,26 @@
             $('input[name="' + name + '"][value="' + value +'"]').prop('checked', true);
         }
 
+        function change_status(id, status) {
+            $('#e_'+id).find('.status').html(status? '运行': '关闭');
+        }
+
+        function change_operation(id, status) {
+            $('#e_'+id).find('.operations').find(':first-child').remove();
+            $('#e_'+id).find('.operations').prepend(
+                status? '<div class="btn btn-xs btn-danger" onclick="stopMemcached(' + id + ')">停止</div>': '<div class="btn btn-xs btn-info" onclick="startMemcached(' + id + ')">启动</div>');
+        }
+
+        function change_tr(id, status) {
+            change_status(id, status);
+            change_operation(id, status);
+        }
+
         $(function(){
+            {% for mc in memcacheds %}
+                change_tr({{mc.id}}, {{mc.status}});
+            {% endfor %}
+
             {% if form.errors|length != 0 %}
                 $('#myModal').modal('show');
             {%endif%}

@@ -41,7 +41,7 @@
         {% for vhost in vhosts %}
             <tr>
                 <td>{{loop.index}}</td>
-                <td>{{vhost.idc.name}}</td>
+                <td>{{vhost.idc.en_name}}</td>
                 <td>{{vhost.ip}}</td>
                 <td>
                     <button type="button" onclick='modifyUser("{{vhost.id}}", {{vhost.idc.id}}, "{{vhost.ip}}")' class="btn btn-danger">

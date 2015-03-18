@@ -33,15 +33,15 @@
     <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>序号</th>
                 <th>机房名称</th>
+                <th>机房编码</th>
                 <th>操作</th>
             </tr>
         </thead>
         <tbody>
         {% for idc in entities %}
             <tr>
-                <td>{{loop.index}}</td>
+                <td>{{idc.en_name}}</td>
                 <td>{{idc.name}}</td>
                 <td>
                     <button type="button" onclick='modify_entity("{{idc.id}}", "{{idc.name}}", "{{idc.en_name}}")' class="btn btn-danger">

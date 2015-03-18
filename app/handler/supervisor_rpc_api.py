@@ -14,6 +14,8 @@ from subprocess import PIPE, Popen
 import logging
 from supervisor.options import make_namespec, split_namespec
 from supervisor import xmlrpc
+from flask import flash
+import json
 
 
 def process_already_exists(process_name, process_infos):
@@ -151,7 +153,10 @@ class SupervisorController(object):
                     else:
                         name = make_namespec(group_name, process_name)
                         self.logger.info('%s: started' % name)
-        return self.status(names)
+        status = self.status(names)
+        rjson = json.dumps(status, indent=2)
+        flash(rjson, 'ansible_results')
+        return status
 
     def stop(self, names):
         '''
@@ -200,7 +205,10 @@ class SupervisorController(object):
                         name = make_namespec(group_name, process_name)
                         self.logger.info('%s: stopped' % name)
 
-        return self.status(names)
+        status = self.status(names)
+        rjson = json.dumps(status, indent=2)
+        flash(rjson, 'ansible_results')
+        return status
 
     def restart(self, names):
         '''

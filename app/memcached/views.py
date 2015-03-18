@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import render_template, url_for, flash, redirect, jsonify
+from flask import render_template, url_for, flash, redirect, session
 from . import memcached
 from .forms import MemcachedForm
 from .. import db
@@ -24,7 +24,6 @@ def start(id):
     deploy(id)
     result = sc.update([process_name])
     result = sc.start([process_name])
-    print result
     if result[0]['statename'] == 'RUNNING':
         mc.status = 1
     return result[0]
@@ -35,6 +34,23 @@ def start(id):
 def _start(id):
     return start(id)
 
+
+@memcached.route('/status/<int:id>', methods=['GET'])
+@json_response
+def status(id):
+    mc = Memcached.query.get(id)
+    process_name = u'{project_name}_memcached_{vip}_{vport}'.format(
+            project_name=mc.project.name,
+            vip=mc.vhost.ip,
+            vport=mc.vhost_port,
+        )
+    sc = SupervisorController(mc.host.ip)
+
+    result = sc.status([process_name])
+    if result[0]['statename'] == 'RUNNING':
+        import pdb; pdb.set_trace()
+        mc.status = 1
+    return result[0]
 
 def stop(id):
     mc = Memcached.query.get(id)
@@ -51,7 +67,7 @@ def stop(id):
         results = remove_vip([mc.host.ip], mc.vhost.ip)
 
     undeploy(id)
-    if result[0]['statename'] == 'STOPPED':
+    if len(result) == 0 or result[0]['statename'] == 'STOPPED':
         mc.status = 0
     return result
 
