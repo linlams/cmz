@@ -44,7 +44,7 @@
         <tbody>
         {% for k in keepaliveds %}
             <tr>
-                <td>{{k.code}}</td>
+                <td>{{k.name}}</td>
                 <td>{{k.idc.name}}</td>
                 <td>{{k.ip}} ({{k.host_interface}})</td>
                 <td>{{k.backup_ip}} ({{k.backup_host_interface}})</td>
@@ -52,12 +52,12 @@
                 <td>
                     {% if k.status %}
                     <div class="btn btn-xs btn-danger" onclick="stopKeepalived({{k.id}})">停止</div>
+                    <div class="btn btn-xs btn-primary" onclick="reloadKeepalived({{k.id}})">Reload</div>
                     {% else %}
                     <div class="btn btn-xs btn-info" onclick="startKeepalived({{k.id}})">启动</div>
                     {% endif %}
-                    <button type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.code}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")' class="btn btn-danger">
+                    <button class="btn btn-xs btn-danger" type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.name}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")'>
                         修改</button>
-                    <div class="btn btn-xs btn-default" onclick='deleteKeepalived({{k.id}})'>删除</div>
                 </td>
             </tr>
         {% endfor %}
@@ -93,6 +93,13 @@
             change_keepalived('undeploy', id)
         }
 
+        function reloadKeepalived(id) {
+            if(!confirm("确定要reload {{entity_type}}吗？")) {
+                return false;
+            }
+            change_keepalived('reload', id)
+        }
+
         function stopKeepalived(id) {
             if(!confirm("确定要停止{{entity_type}}吗？")) {
                 return false;
@@ -116,6 +123,7 @@
                 url: '/keepalived/' + action + '/'+id,
                 type: 'GET',
                 success: function(result) {
+                    debugger;
                     if (result) {
                         window.location.href = window.location.href;
                     }

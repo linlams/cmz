@@ -65,13 +65,16 @@
     </div>
     {% set logs = get_flashed_messages(category_filter=["ansible_results"]) %}
     {% if logs|length > 0 %}
-        {% for log in logs %}
-        <div class="panel panel-info">
-            <div class="panel-body">
-                <pre>{{ log }}</pre>
-            </div>
+        <button class="btn btn-info" type="button" data-toggle="collapse" data-target="#collapseLogs" aria-expanded="false" aria-controls="collapseLogs">
+           显示日志 
+        </button>
+        <div class="collapse" id="collapseLogs">
+          <div class="well">
+            {% for log in logs %}
+            <pre>{{ log }}</pre>
+            {% endfor %}
+          </div>
         </div>
-        {% endfor %}
     {% endif %}
 </div>
 {% endblock %}
@@ -79,7 +82,6 @@
 {% block scripts %}
     <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script> 
     <script src="{{ url_for('static', filename='js/jquery.blockUI.js') }}"</script>
-    <script src="{{ url_for('static', filename='js/jquery-ui-1.10.3.custom.min.js') }}"></script> 
     <script src="{{ url_for('static', filename='js/underscore-min.js') }}"></script> 
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script> 
     <script src="{{ url_for('static', filename='js/jquery.sortable5.min.js') }}"></script> 

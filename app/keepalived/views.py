@@ -66,6 +66,22 @@ def _stop(id):
     return stop(id)
 
 
+def reload(id):
+    k = Keepalived.query.get(id)
+    master_ip, backup_ip = k.ip, k.backup_ip
+    result = ansible_service([master_ip, backup_ip], 'keepalived', 'reloaded') 
+    if result['contacted']:
+        k.status = 0
+    return result
+
+
+@keepalived.route('/reload/<int:id>', methods=['GET', 'POST'])
+@json_response
+def _reload(id):
+    'Reload Keepalived'
+    return reload(id)
+
+
 def deploy(keepalived):
     from jinja2 import Environment, PackageLoader
     env = Environment(loader=PackageLoader('app', 'templates'))

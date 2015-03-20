@@ -115,7 +115,7 @@
         }
 
         function change_memcached(action, id){
-            $.blockUI({message: '系统正在调用ansible进行事务处理，请耐心等待大约10秒'})
+            $.blockUI({message: '<div class="alert alert-info" role="alert" style="margin-bottom:0px"><img src="{{url_for('static', filename="image/loading.gif")}}"/>系统正在调用ansible进行事务处理，请耐心等待大约10秒</div>'})
             $.ajax({
                 url: '/memcached/' + action + '/'+id,
                 type: 'GET',
