@@ -53,7 +53,7 @@ class KeepalivedForm(Form):
             raise ValidationError(u'%s 已经被绑定' % (field.data))
 
     def fill_model(self, k):
-        k.code = self.code.data
+        k.name = self.name.data
         k.idc = Idc.query.get(self.idc_id.data)
         k.ip = self.ip.data
         k.host_interface = self.host_interface.data

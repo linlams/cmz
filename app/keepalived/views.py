@@ -5,7 +5,7 @@ from .forms import KeepalivedForm
 from .. import db
 from ..models import User, Role, Department, Keepalived, Project, Vhost, Host, Idc
 from ..handler.supervisor_rpc_api import SupervisorController
-from ..handler.myansible import ansible_save, ansible_service, ansible_file
+from ..handler.myansible import ansible_save, ansible_service, ansible_file, ansible_yum
 from ..util import json_response
 
 
@@ -83,6 +83,7 @@ def _reload(id):
 
 
 def deploy(keepalived):
+    ansible_yum([keepalived['ip']], 'keepalived', 'installed'),
     from jinja2 import Environment, PackageLoader
     env = Environment(loader=PackageLoader('app', 'templates'))
     template = env.get_template('/etc/keepalived/keepalived.conf.template')

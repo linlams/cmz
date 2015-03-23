@@ -2,4 +2,5 @@ pymongo
 PyYAML
 redis
 flask
-
+supervisor
+ansible
