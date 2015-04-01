@@ -2,7 +2,7 @@
 from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, SelectField,\
     HiddenField, IntegerField, RadioField
-from wtforms.validators import Required, IPAddress
+from wtforms.validators import Required, IPAddress, Regexp
 from ..models import Keepalived, Idc
 from wtforms import ValidationError
 from sqlalchemy import or_
@@ -18,7 +18,7 @@ ROLE_CHOICES = []
 
 class KeepalivedForm(Form):
     id = HiddenField(u'ID')
-    name = StringField(u'名称', validators=[Required()])
+    name = StringField(u'名称', validators=[Required(), Regexp(r'[A-Za-z0-9_]+')])
 
     idc_id = SelectField(u'IDC机房', validators=[Required()], choices=IDCS_CHOICES)
 
@@ -27,6 +27,11 @@ class KeepalivedForm(Form):
 
     backup_ip = StringField(u'备IP', validators=[Required(), IPAddress()])
     backup_host_interface = StringField(u'备网卡', validators=[Required(), ])
+
+    def validate_name(self, field):
+        k = Keepalived.query.filter_by(name=field.data).first()
+        if k is not None:
+            raise ValidationError(u'%s 已经被使用.' % (field.data))
 
     def validate_ip(self, field):
         if self.id.data:

@@ -14,28 +14,7 @@ def start(id):
     master_ip = k.ip
     backup_ip = k.backup_ip
 
-    vips = list(set(map(lambda x: x.vhost.ip, k.memcacheds)))
-
-    master = {
-        'ip': master_ip,
-        'host_interface': k.host_interface,
-        'memcacheds': k.memcacheds,
-        'master': True,
-        'priority': 100,
-        'vips': vips,
-    }
-    master_status = deploy(master)
-    backup = {
-        'ip': backup_ip,
-        'host_interface': k.backup_host_interface,
-        'memcacheds': k.memcacheds,
-        'master': False,
-        'priority': 99,
-        'vips': vips,
-    }
-    backup_status = deploy(backup)
-    
-    if master_status and backup_status:
+    if deploy(k):
         k.deployed=True
 
     result = ansible_service([master_ip, backup_ip], 'keepalived', 'started') 
@@ -69,9 +48,8 @@ def _stop(id):
 def reload(id):
     k = Keepalived.query.get(id)
     master_ip, backup_ip = k.ip, k.backup_ip
+    prepare_conf_file(k)
     result = ansible_service([master_ip, backup_ip], 'keepalived', 'reloaded') 
-    if result['contacted']:
-        k.status = 0
     return result
 
 
@@ -82,16 +60,49 @@ def _reload(id):
     return reload(id)
 
 
-def deploy(keepalived):
-    ansible_yum([keepalived['ip']], 'keepalived', 'installed'),
+def prepare_conf_file(k):
+
+    vips = list(set(map(lambda x: x.vhost.ip, k.memcacheds)))
+
+    master = {
+        'id': k.id,
+        'name': k.name,
+        'ip': k.ip,
+        'host_interface': k.host_interface,
+        'memcacheds': k.memcacheds,
+        'master': True,
+        'priority': 100,
+        'vips': vips,
+    }
+    backup = {
+        'id': k.id,
+        'name': k.name,
+        'ip': k.backup_ip,
+        'host_interface': k.backup_host_interface,
+        'memcacheds': k.memcacheds,
+        'master': False,
+        'priority': 99,
+        'vips': vips,
+    }
+
     from jinja2 import Environment, PackageLoader
     env = Environment(loader=PackageLoader('app', 'templates'))
     template = env.get_template('/etc/keepalived/keepalived.conf.template')
-    content = template.render(**keepalived)
-    result = ansible_save([keepalived['ip']], content, '/etc/keepalived/keepalived.conf')
-    if result['contacted']:
-        return True
-    return False
+
+    content = template.render(**master)
+    ansible_save([master['ip']], content, '/etc/keepalived/keepalived.conf')
+    content = template.render(**backup)
+    ansible_save([backup['ip']], content, '/etc/keepalived/keepalived.conf')
+
+
+def deploy(keepalived):
+    packages = ["keepalived", "ipvsadm", "lm_sensors-libs", "net-snmp-libs", "dialog"]
+    for package in packages:
+        ansible_yum([keepalived.ip, keepalived.backup_ip], package, 'installed')
+
+    prepare_conf_file(keepalived)
+
+    return True
 
 
 @keepalived.route('/', methods=['GET'])
