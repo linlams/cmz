@@ -6,9 +6,8 @@ import json
 from config import KSSO_LOCAL_URL, KSSO_SERVER_URL
 from . import auth
 from ..models import User
+from .. import db
 
-
-#import pdb; pdb.set_trace()
 
 @auth.route('/login')
 def login():
@@ -19,10 +18,14 @@ def login():
         req.add_header('Referer', KSSO_LOCAL_URL)
         sss = urllib2.urlopen(req)
         result = json.loads(sss.read())
-        # import pdb; pdb.set_trace()
 
         if result['result'] and result['detail']['departmentId__departmentName'] == u'运维部':
-            user = User.query.filter_by(username=result['user']).first()
+            username = result['user']
+            user = User.query.filter_by(username=username).first()
+            if user is None:
+                user = User(username=username)
+                db.session.add(user)
+                db.session.commit()
             login_user(user)
             return redirect(KSSO_LOCAL_URL)
         else:
