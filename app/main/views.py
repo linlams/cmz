@@ -20,7 +20,7 @@ def index():
 def user_list():
     form = UserForm()
     form.role_id.choices = [(str(r.id), r.name) for r in Role.query.all()]
-    form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
+    # form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
     form.csrf_enabled = True
     if form.validate_on_submit():
         if form.id.data:
@@ -30,7 +30,7 @@ def user_list():
 
         user.username = form.username.data
         user.role = Role.query.get(form.role_id.data)
-        user.project = Project.query.get(form.project_id.data)
+        # user.project = Project.query.get(form.project_id.data)
 
         db.session.add(user)
         if form.id.data:
