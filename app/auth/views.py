@@ -29,7 +29,7 @@ def login():
             login_user(user)
             return redirect(KSSO_LOCAL_URL)
         else:
-            return u"你不是能正常登录此网站，请联系系统管理员"
+            return u"目前只能有运维部的童鞋可以登录些系统。你不是能正常登录此网站，请联系系统管理员"
 
     else:
         return redirect(
@@ -46,5 +46,4 @@ def login():
 @auth.route('/logout')
 def logout():
     logout_user()
-    return redirect('/')
-    #return redirect(request.args.get('next') or url_for('main.index'))
+    return redirect("%s/logout?forward=%s" % (KSSO_SERVER_URL, KSSO_LOCAL_URL))

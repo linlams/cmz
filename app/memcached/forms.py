@@ -43,11 +43,6 @@ class MemcachedForm(Form):
             favorable_vhost_port = max(map(lambda x: x.vhost_port, mcs)) + 1
             raise ValidationError(u'%s(%s) 已经被注册. 推荐使用 %s.' % (field.label.text, field.data, favorable_vhost_port))
 
-    def validate_vhost_id(self, field):
-        if self.id.data:
-            mc = Memcached.query.filter_by(vhost_port=field.data).first()
-        #if mc is not None:
-
     def validate_max_mem_size(self, field):
         host = Host.query.get(self.host_id.data)
         available_mem_size = host.mem_size - host.allocated_mem_size(self.id.data)

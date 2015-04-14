@@ -33,18 +33,28 @@ def md5(*args):
     m.update(str)
     return m.hexdigest()
 
+SLOW_TIME = 0.1
 
-def json_response(func):
-    '把函数的返回值以json的格式输出'
+def log_slow_request(func):
     @functools.wraps(func)
     def _(*args, **kwargs):
         begin = time.time()
         res = func(*args, **kwargs)
         end = time.time()
 
-        if (end - begin) > 0.01:
+        if (end - begin) > SLOW_TIME:
             current_app.logger.warning('Slow request: %s\n\tMethod: %s\n \tDuration: %s\n' %
                                        (request.url, request.method, end - begin))
+        return res
+    return _
+
+def json_response(func):
+    '把函数的返回值以json的格式输出'
+    @functools.wraps(func)
+    @log_slow_request
+    def _(*args, **kwargs):
+
+        res = func(*args, **kwargs)
 
         status = 200
         if isinstance(res, tuple):
@@ -99,17 +109,6 @@ TYPE_CONVERTORS = dict(
     float=to_float,
     number=to_number,
 )
-
-# TODO: cerberus types
-#    string
-#    integer
-#    float
-#    number (integer or float)
-#    boolean
-#    datetime
-#    dict (formally collections.mapping)
-#    list (formally collections.sequence, exluding strings)
-#    set
 
 
 CONVERTORS = {

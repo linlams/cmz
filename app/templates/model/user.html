@@ -46,7 +46,7 @@
                 <td>{{user.username}}</td>
                 <td>{{user.role.name}}</td>
                 <td>{{user.project.name}}</td>
-                <td>{{user.project.department.name}}</td>
+                <td>{% if user.project %}{{user.project.department.name}}{%endif%}</td>
                 <td>
                     <button type="button" onclick='modify("{{user.id}}", "{{user.username}}", {{user.role.id}}, "{{user.project.id}}")' class="btn btn-danger">
                         修改</button>

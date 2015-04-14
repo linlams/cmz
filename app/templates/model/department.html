@@ -42,7 +42,7 @@
                 <td>{{department.name}}</td>
                 <td>{{department.code}}</td>
                 <td>
-                    <button type="button" onclick="modify('{{department.id}}', '{{department.code}}')" class="btn btn-danger">
+                    <button type="button" onclick="modify('{{department.id}}', '{{department.code}}', '{{department.name}}')" class="btn btn-danger">
                         修改</button>
                 </td>
             </tr>
@@ -85,10 +85,10 @@
             });
         }
 
-        function modify(id, name, name) {
+        function modify(id, code, name) {
             $('#edit_panel_title').html('修改信息');
             $('#id').val(id);
-            $('#name').val(name).attr('readonly', 'readonly');
+            $('#code').val(code).attr('readonly', 'readonly');
             $('#name').val(name);
             $('#myModal').modal('show');
         }
