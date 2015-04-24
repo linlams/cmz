@@ -73,6 +73,8 @@ class Memcached(db.Model, Entity):
     STOPPED_STATUS = 0
     RUNNING_STATUS = 1
     status = db.Column(db.Integer, nullable=False, default=0)
+    responsible_persons = db.Column(db.String(128))
+    users = db.Column(db.String(256))
 
     __table_args__ = (
         db.UniqueConstraint("host_id", "host_port"),

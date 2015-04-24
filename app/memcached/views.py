@@ -173,6 +173,8 @@ def index():
         mc.vhost_port = form.vhost_port.data
         mc.host_port = form.host_port.data
         mc.max_mem_size = form.max_mem_size.data
+        mc.responsible_persons = form.responsible_persons.data
+        mc.users = form.users.data
 
         db.session.add(mc)
         db.session.commit()

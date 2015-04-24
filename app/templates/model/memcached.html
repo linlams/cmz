@@ -59,7 +59,7 @@
                 <td class='operations'>
                     <div class="btn-group" role="group">
                         <div class="btn btn-sm btn-danger" onclick="stopMemcached({{mc.id}})">停止</div>
-                        <button type="button" onclick='modifyMemcached("{{mc.id}}", {{mc.host.idc.id}}, {{mc.keepalived.id}}, "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_mem_size}}, "{{mc.master}}")' class="btn btn-sm btn-success">
+                        <button type="button" onclick='modifyMemcached("{{mc.id}}", {{mc.host.idc.id}}, {{mc.keepalived.id}}, "{{mc.project.id}}", "{{mc.vhost.id}}", "{{mc.vhost_port}}", "{{mc.host.id}}", "{{mc.host_port}}", {{mc.max_mem_size}}, "{{mc.master}}", "{{mc.responsible_persons}}", "{{mc.users}}")' class="btn btn-sm btn-success">
                             修改</button>
                         <div class="btn btn-sm btn-default" onclick='deleteMemcached({{mc.id}})'>删除</div>
                     </div>
@@ -130,7 +130,7 @@
             });
         }
 
-        function modifyMemcached(id, idc_id, keepalived_id, project_id, vhost_id, vhost_port, host_id, host_port, max_mem_size, master) {
+        function modifyMemcached(id, idc_id, keepalived_id, project_id, vhost_id, vhost_port, host_id, host_port, max_mem_size, master, responsible_persons, users) {
             $('#edit_panel_title').html('修改');
             $('#id').val(id);
             $('#idc_id').val(idc_id).attr('readonly', 'readonly');
@@ -141,6 +141,8 @@
             $('#host_id').val(host_id);
             $('#host_port').val(host_port).attr('readonly', 'readonly');
             $('#max_mem_size').val(max_mem_size);
+            $('#responsible_persons').val(responsible_persons);
+            $('#users').val(users);
             setRadioValue('master', master);
             $('#myModal').modal('show');
         }

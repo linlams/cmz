@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import urllib2
+import re
+import json
 from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, SelectField,\
     HiddenField, IntegerField, RadioField
-from wtforms.validators import Required
+from wtforms.validators import Required, Regexp
 from ..models import Memcached, Host
 from wtforms import ValidationError
 
@@ -29,6 +32,8 @@ class MemcachedForm(Form):
     host_id = SelectField(u'真实主机', validators=[Required()], choices=HOST_CHOICES)
     host_port = IntegerField(u'真实主机端口', validators=[Required()])
     max_mem_size = IntegerField(u'最大内存(MB)', validators=[Required()])
+    responsible_persons = StringField(u'负责人(统一认证平台账号,多人用英文逗号分隔)', validators=[Regexp(r'^([A-Za-z0-9_]+)*(\s*,\s*[A-Za-z0-9_]*)*$')])
+    users = StringField(u'使用人(统一认证平台账号,多人用英文逗号分隔)', validators=[Regexp(r'^([A-Za-z0-9_]+)*(\s*,\s*[A-Za-z0-9_]*)*$')])
 
     def validate_vhost_port(self, field):
         if self.id.data:
@@ -48,4 +53,18 @@ class MemcachedForm(Form):
         available_mem_size = host.mem_size - host.allocated_mem_size(self.id.data)
         if available_mem_size < (int(field.data)/1024.0):
             raise ValidationError(u'%s(%.3fG) 已经使用了%.3fG. 还有%.0fM可用于分配.' % (host.ip, host.mem_size, host.allocated_mem_size(self.id.data), available_mem_size*1024))
+
+    def validate_responsible_persons(self, field):
+        spliter = re.compile('\s*,\s*')
+        users = spliter.split(field.data)
+        for user in users: 
+            req = urllib2.Request('https://ksso.kisops.com/manage/api?user=zabbix&password=devops123456!', data="username=%s" % user)
+            req.get_method = lambda: 'POST'
+            sso_users_str = urllib2.urlopen(req).read()
+            users = json.loads(sso_users_str)
+            if len(users) == 0:
+                raise ValidationError(u'统一认证平台不存在用户:%s' % user)
+
+    def validate_users(self, field):
+        self.validate_responsible_persons(field)
 
