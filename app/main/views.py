@@ -4,6 +4,7 @@ from . import main
 from .forms import UserForm, DepartmentForm, ProjectForm,\
     VhostForm, HostForm, IdcForm
 
+from ..handler.myansible import ansible_save, ansible_service, ansible_file, ansible_yum
 from .. import db
 from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc
 from flask.ext.login import login_required
@@ -11,6 +12,7 @@ from flask.ext.login import login_required
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
+    # return render_template('index.html')
     return redirect(url_for('memcached.index'))
 
 
@@ -19,7 +21,7 @@ def index():
 def user_list():
     form = UserForm()
     form.role_id.choices = [(str(r.id), r.name) for r in Role.query.all()]
-    form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
+    # form.project_id.choices = [(str(x.id), x.name) for x in Project.query.all()]
     form.csrf_enabled = True
     if form.validate_on_submit():
         if form.id.data:
@@ -29,7 +31,7 @@ def user_list():
 
         user.username = form.username.data
         user.role = Role.query.get(form.role_id.data)
-        user.project = Project.query.get(form.project_id.data)
+        # user.project = Project.query.get(form.project_id.data)
 
         db.session.add(user)
         if form.id.data:
@@ -62,8 +64,8 @@ def department_list():
         else:
             department = Department()
 
+        department.code = form.code.data
         department.name = form.name.data
-        department.en_name = form.en_name.data
 
         db.session.add(department)
         if form.id.data:
@@ -95,17 +97,10 @@ def project_list():
         if form.id.data:
             project = Project.query.get(form.id.data)
         else:
-            if Project.query.filter_by(name=form.name.data).first() is not None:
-                flash(u'已经存在同名的了')
-                projects = Project.query.all()
-                return render_template('model/project.html',
-                                       projects=projects,
-                                       form=form,)
-
             project = Project()
 
+        project.code = form.code.data
         project.name = form.name.data
-        project.en_name = form.en_name.data
         project.department = Department.query.get(form.department_id.data)
 
         db.session.add(project)
@@ -129,6 +124,32 @@ def delete_project(id):
     return redirect(url_for('main.project_list'))
 
 
+def prepare_zabbix_lld_memcached_script(hosts):
+    ansible_yum(hosts, 'zabbix-agent', 'present')
+
+    def ansible_copy(command):
+        run(hosts, 'copy', command)
+
+    def ansible_file(command):
+        run(hosts, 'file', command)
+
+    dirs = ['/etc/zabbix/zabbix_agentd.conf.d', '/etc/supervisord/conf.d']
+    for dir in dirs:
+        ansible_file("dest=%s state=directory" % dir)
+
+    files = [
+                '/etc/zabbix/zabbix_agentd.conf.d/memcached.conf',
+                '/etc/zabbix/script/memcached_discovery.py',
+                '/etc/zabbix/script/memcached_status.py',
+            ]
+
+    for file in files:
+        ansible_copy("src=%s/app/templates%s dest=%s backup=yes" % 
+                (current_app.config['BASEDIR'], file, file))
+
+    ansible_service(hosts, 'zabbix_agentd', 'restarted')
+
+
 @main.route('/host', methods=['GET', 'POST'])
 @login_required
 def host_list():
@@ -146,6 +167,7 @@ def host_list():
         host.mem_size = form.mem_size.data
 
         db.session.add(host)
+        prepare_zabbix_lld_memcached_script([host.ip])
         if form.id.data:
             flash(u'修改成功!')
         else:
@@ -175,8 +197,8 @@ def idc_list():
             idc = Idc.query.get(form.id.data)
         else:
             idc = Idc()
+        idc.code = form.code.data
         idc.name = form.name.data
-        idc.en_name = form.en_name.data
 
         db.session.add(idc)
 

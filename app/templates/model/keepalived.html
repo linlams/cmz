@@ -35,29 +35,33 @@
             <tr>
                 <th>名称</th>
                 <th>IDC机房</th>
-                <th>主机IP</th>
-                <th>主／备</th>
+                <th>主IP</th>
+                <th>备IP</th>
                 <th>状态</th>
                 <th>操作</th>
             </tr>
         </thead>
         <tbody>
         {% for k in keepaliveds %}
-            <tr>
+            <tr id='e_{{k.id}}'>
                 <td>{{k.name}}</td>
-                <td>{{k.idc.en_name}}({{k.idc.name}})</td>
-                <td>{{k.ip}}</td>
-                <td>{{k.backup_ip}}</td>
-                <td>{{k.status}}</td>
+                <td>{{k.idc.name}}</td>
+                <td>{{k.ip}} ({{k.host_interface}})</td>
+                <td>{{k.backup_ip}} ({{k.backup_host_interface}})</td>
+                <td class="status">{{k.status}}</td>
                 <td>
-                    {% if k.status %}
-                    <div class="btn btn-xs btn-danger" onclick="stopKeepalived({{k.id}})">停止</div>
-                    {% else %}
-                    <div class="btn btn-xs btn-info" onclick="startKeepalived({{k.id}})">启动</div>
-                    {% endif %}
-                    <button type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.name}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")' class="btn btn-danger">
-                        修改</button>
-                    <div class="btn btn-xs btn-default" onclick='deleteKeepalived({{k.id}})'>删除</div>
+                    <div class="operations">
+                        <div class="btn-group" role="group">
+                            {% if k.status %}
+                            <div class="btn btn-sm btn-danger" onclick="stopKeepalived({{k.id}})">停止</div>
+                            <div class="btn btn-sm btn-primary" onclick="reloadKeepalived({{k.id}})">Reload</div>
+                            {% else %}
+                            <div class="btn btn-sm btn-info" onclick="startKeepalived({{k.id}})">启动</div>
+                            {% endif %}
+                            <button class="btn btn-sm btn-danger" type="button" onclick='modifyKeepalived("{{k.id}}", "{{k.name}}", "{{k.idc.id}}", "{{k.ip}}", "{{k.host_interface}}", "{{k.backup_ip}}", "{{k.backup_host_interface}}")'>
+                                修改</button>
+                        </div>
+                    </div>
                 </td>
             </tr>
         {% endfor %}
@@ -93,6 +97,13 @@
             change_keepalived('undeploy', id)
         }
 
+        function reloadKeepalived(id) {
+            if(!confirm("确定要reload {{entity_type}}吗？")) {
+                return false;
+            }
+            change_keepalived('reload', id)
+        }
+
         function stopKeepalived(id) {
             if(!confirm("确定要停止{{entity_type}}吗？")) {
                 return false;
@@ -112,10 +123,12 @@
         }
 
         function change_keepalived(action, id){
+            $.blockUI({message: '<div class="alert alert-info" role="alert" style="margin-bottom:0px"><img src="{{url_for('static', filename="image/loading.gif")}}"/>系统正在调用ansible进行事务处理，请耐心等待大约10秒</div>'})
             $.ajax({
                 url: '/keepalived/' + action + '/'+id,
                 type: 'GET',
                 success: function(result) {
+                    debugger;
                     if (result) {
                         window.location.href = window.location.href;
                     }
@@ -141,10 +154,24 @@
             $('input[name="' + name + '"][value="' + value +'"]').prop('checked', true);
         }
 
+        function change_status(id, status) {
+            $('#e_'+id).find('.status').html(status? '运行': '关闭');
+        }
+
         $(function(){
+            {% for k in keepaliveds %}
+                change_status({{k.id}}, {{k.status}});
+            {% endfor %}
+
             {% if form.errors|length != 0 %}
                 $('#myModal').modal('show');
             {%endif%}
+
+            $('[type="submit"]').click(function() {
+                $.blockUI({message:"<h1>正在后台处理中...</h1>"});
+                $('#myModal').modal('hide');
+            });
+
             $('#vhost_port').change(function() {
                 var vhost_port = $(this).val();
                 $('#host_port').val(vhost_port);

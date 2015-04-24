@@ -3,13 +3,13 @@
 # global configure file
 
 global_defs {
-   router_id MEMCACHED_LVS
+   router_id {{name}}
 }
 
 vrrp_instance memcached  {
     state {% if master %} MASTER{% else %} BACKUP {% endif %}
     interface {{host_interface}}
-    virtual_router_id 200
+    virtual_router_id {{id}}
     priority {{priority}}
     advert_int 1
     authentication {
