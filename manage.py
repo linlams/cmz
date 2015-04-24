@@ -18,7 +18,7 @@ from app.models import User, Role, Host, Vhost, Department, Project, Memcached, 
 from flask.ext.script import Manager, Shell
 from flask.ext.migrate import Migrate, MigrateCommand
 
-app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+app = create_app(os.getenv('CACHE_MGR_CONFIG') or 'default')
 manager = Manager(app)
 migrate = Migrate(app, db)
 
@@ -73,9 +73,6 @@ def deploy():
 
     # create user roles
     Role.insert_roles()
-
-    # create self-follows for all users
-    User.add_self_follows()
 
 
 if __name__ == '__main__':

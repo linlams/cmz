@@ -79,7 +79,7 @@ def remove_duplicate(iterable, key=None):
 
 
 def to_boolean(s):
-    return s in {'True', 'true', 'on', '1', 'yes'}
+    return s in set(['True', 'true', 'on', '1', 'yes'])
 
 
 def to_integer(s):

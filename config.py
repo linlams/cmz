@@ -7,11 +7,11 @@ class Config:
     SSL_DISABLE = False
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_RECORD_QUERIES = True
-    FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN')
-    FLASKY_POSTS_PER_PAGE = 20
-    FLASKY_FOLLOWERS_PER_PAGE = 50
-    FLASKY_COMMENTS_PER_PAGE = 30
-    FLASKY_SLOW_DB_QUERY_TIME = 0.5
+    CACHE_MGR_ADMIN = os.environ.get('CACHE_MGR_ADMIN')
+    CACHE_MGR_POSTS_PER_PAGE = 20
+    CACHE_MGR_FOLLOWERS_PER_PAGE = 50
+    CACHE_MGR_COMMENTS_PER_PAGE = 30
+    CACHE_MGR_SLOW_DB_QUERY_TIME = 0.5
 
     @staticmethod
     def init_app(app):
@@ -33,7 +33,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+        'mysql://cache_mgr_pro:870b6pe1zlvdba97bs7qo7ex7ef5fr@10.10.19.200:10217/cache_mgr?charset=utf8'
 
     @classmethod
     def init_app(cls, app):
@@ -50,9 +50,9 @@ class ProductionConfig(Config):
                 secure = ()
         mail_handler = SMTPHandler(
             mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),
-            fromaddr=cls.FLASKY_MAIL_SENDER,
-            toaddrs=[cls.FLASKY_ADMIN],
-            subject=cls.FLASKY_MAIL_SUBJECT_PREFIX + ' Application Error',
+            fromaddr=cls.CACHE_MGR_MAIL_SENDER,
+            toaddrs=[cls.CACHE_MGR_ADMIN],
+            subject=cls.CACHE_MGR_MAIL_SUBJECT_PREFIX + ' Application Error',
             credentials=credentials,
             secure=secure)
         mail_handler.setLevel(logging.ERROR)
@@ -83,4 +83,4 @@ config = {
 }
 
 KSSO_SERVER_URL = 'https://ksso.ksops.com'
-KSSO_LOCAL_URL = 'http://localhost:5000'
+KSSO_LOCAL_URL = 'http://10.10.16.134:8080'
