@@ -4,6 +4,7 @@ from . import main
 from .forms import UserForm, DepartmentForm, ProjectForm,\
     VhostForm, HostForm, IdcForm
 
+from ..handler.myansible import ansible_save, ansible_service, ansible_file, ansible_yum
 from .. import db
 from ..models import User, Role, Department, Memcached, Project, Vhost, Host, Idc
 from flask.ext.login import login_required
@@ -123,6 +124,32 @@ def delete_project(id):
     return redirect(url_for('main.project_list'))
 
 
+def prepare_zabbix_lld_memcached_script(hosts):
+    ansible_yum(hosts, 'zabbix-agent', 'present')
+
+    def ansible_copy(command):
+        run(hosts, 'copy', command)
+
+    def ansible_file(command):
+        run(hosts, 'file', command)
+
+    dirs = ['/etc/zabbix/zabbix_agentd.conf.d', '/etc/supervisord/conf.d']
+    for dir in dirs:
+        ansible_file("dest=%s state=directory" % dir)
+
+    files = [
+                '/etc/zabbix/zabbix_agentd.conf.d/memcached.conf',
+                '/etc/zabbix/script/memcached_discovery.py',
+                '/etc/zabbix/script/memcached_status.py',
+            ]
+
+    for file in files:
+        ansible_copy("src=%s/app/templates%s dest=%s backup=yes" % 
+                (current_app.config['BASEDIR'], file, file))
+
+    ansible_service(hosts, 'zabbix_agentd', 'restarted')
+
+
 @main.route('/host', methods=['GET', 'POST'])
 @login_required
 def host_list():
@@ -140,6 +167,7 @@ def host_list():
         host.mem_size = form.mem_size.data
 
         db.session.add(host)
+        prepare_zabbix_lld_memcached_script([host.ip])
         if form.id.data:
             flash(u'修改成功!')
         else:
